@@ -1,0 +1,10 @@
+build/
+dataset/
+src/CCRTree.cpp
+log/
+script/log_delta
+script/log_reach
+script/memory*
+script/runDelta.sh
+script/runDelta_back.sh
+script/runQuery.sh
