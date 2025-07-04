@@ -22,13 +22,10 @@ SET(OREACH ${ROOT_DIR}/third/O-Reach)
 include_directories(include ${SPD_DIR})
 set(DCMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_FLAGS "-O3 -fopenmp")
-#set(CMAKE_CXX_FLAGS "-g -fopenmp -pg")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address  -fsanitize-recover=address -fno-stack-protector -fno-omit-frame-pointer")
 
 set(CMAKE_CXX_STANDARD 14)
 
 set(SOURCE_FILE Computation.cpp)
-# aux_source_directory(${CMAKE_SOURCE_DIR}/src SRC)
 file(GLOB_RECURSE SRC ${CMAKE_SOURCE_DIR}/src/*.cpp)
 
 

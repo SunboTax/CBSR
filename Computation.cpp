@@ -151,12 +151,8 @@ int main(int argc, char *argv[]) {
         Reachpairs.insert(Reachpairs.end(), temp.begin(), temp.end());
     }
 
-    // exportQuery(queryResFilePath+"_1", pairs);
-    // return 0;
-
     CCR::Timer timer;
     vector<int> queryRes(Reachpairs.size(), 0);
-    // fstream timeFile(timeFilePath, ios::app);
     uint64_t trans_time = 0;
     unsigned bgEdgeNum = 0;
     for (const auto &Neighbors : bg.adj_matrix_l) bgEdgeNum += Neighbors.size();
@@ -165,18 +161,9 @@ int main(int argc, char *argv[]) {
     timer.ticker();
     trans_time = timer.get_last_consuming();
     LOG("transformation time = {}(ms)", timer.get_last_consuming());
-    // LOG("g.num_vertices = {}, g.num_edges = {}", g.num_vertices(), g.num_edges());
-    // auto transTime = timer.get_last_consuming();
-    // srand48(time(nullptr));
-
-    // pretreatment::Partitioner partitioner(FLAGS_maxBlock, FLAGS_minBlock);
+   
     Partitioner partitioner(FLAGS_minBlock);
     partitioner.threshold = FLAGS_splitData;
-    int cnt = 0;
-
-    // g = readGraph(FLAGS_inputTestPath);
-    // prinfGraph(g);
-    WARN("cnt = {}", cnt);
     uint64_t partition_time;
     timer.ticker();
     partitioner.runPartition(g, algo);
@@ -189,7 +176,7 @@ int main(int argc, char *argv[]) {
     partitioner.runLocalReachability();  // 内部可达算法
     timer.ticker();
     local_algo_time = timer.get_last_consuming();
-    // LOG("local algorithm {}, time = {} (ms)", algo, timer.get_last_consuming());
+    LOG("local algorithm {}, time = {} (ms)", algo, timer.get_last_consuming());
 
     uint64_t eqClassTime;
     timer.ticker();
@@ -212,30 +199,11 @@ int main(int argc, char *argv[]) {
     timer.ticker();
     queryTime = timer.get_last_consuming();
 
-    int reach = 0;
-    // ofstream ofs(queryResFilePath);
-    for (auto info : queryRes) {
-        if (info) {
-            reach++;
-        }
-        // ofs<<info<<"\n";
-    }
-    cout << "reach = " << reach << "\n";
-
     uint64_t queryTimeNoReach;
     timer.ticker();
     partitioner.runQueryWithBfs(bg, g, UnReachpairs, queryRes);
     timer.ticker();
     queryTimeNoReach = timer.get_last_consuming();
-    reach = 0;
-    // ofstream ofs(queryResFilePath);
-    for (auto info : queryRes) {
-        if (info) {
-            reach++;
-        }
-        // ofs<<info<<"\n";
-    }
-    cout << "reach = " << reach << "\n";
 
     json j;
     j["Frag_num"] = FLAGS_minBlock;
@@ -247,7 +215,7 @@ int main(int argc, char *argv[]) {
     j["ConGraph_indexing_time(ms)"] = eqGraphTime;
     j["Connection_latency_threshold(s)"] =  FLAGS_delta;
 
-    j["ConGraph_node_num"] = std::to_string(partitioner.eqClassGraph.num_vertices())
+    j["ConGraph_node_num"] = std::to_string(partitioner.eqClassGraph.num_vertices());
     j["ConGraph_edge_num"] = std::to_string(partitioner.eqClassGraph.num_edges());
     j["Memory(GB)"] = maxMem;
     j["TotalPosQuery(ms)"] = queryTime;

@@ -3,7 +3,7 @@
 #include <bits/types/locale_t.h>
 #include <bits/types/time_t.h>
 
-// #include <omp.h>
+
 
 #include <algorithm>
 #include <cmath>
@@ -25,46 +25,46 @@
 #include "graph.h"
 #include "utils.h"
 #define InnerBFS
-// #define PATHTREE
+
 #define BORDERBFS
-// #define PathTreeBorder
-// #define NOEQCLASS  // 不使用等价类
-// #define MTHREAD
+
+
+
 #define TWOHOPBORDER
-// #define INNODE
-// #define NEWSETTING
+
+
 #define MERGE_TO_UINT64(high, low) ((static_cast<uint64_t>(high) << 32) | static_cast<uint64_t>(low))
 
 void setBitAtPosition(std::vector<uint64_t> &bits, uint64_t pos) {
-    // 计算pos在哪个uint64_t元素中
+    
     uint64_t elementIndex = pos / 64;
 
-    // 确保vector有足够的元素
+    
     if (elementIndex >= bits.size()) {
         bits.resize(elementIndex + 1, 0);
     }
 
-    // 计算pos在该元素中的具体位置
+    
     uint64_t bitPosition = pos % 64;
 
-    // 使用位运算将对应位置的bit置为1
+    
     bits[elementIndex] |= (1ULL << bitPosition);
 }
 
 struct Element {
     int value;
-    size_t vecIndex;   // 当前元素来自哪个vector
-    size_t elemIndex;  // 当前元素在其vector中的位置
+    size_t vecIndex;   
+    size_t elemIndex;  
 
     bool operator>(const Element &other) const { return value > other.value; }
 };
 
 std::vector<int> mergeAndUniqueUsingMinHeap(const std::vector<std::vector<int>> &vectors) {
-    // 使用lambda函数来定义比较逻辑，构建一个最小堆
+    
     auto comp = [](const Element &a, const Element &b) { return a.value > b.value; };
     std::priority_queue<Element, std::vector<Element>, decltype(comp)> minHeap(comp);
 
-    // 初始化堆，每个vector的第一个元素加入堆
+    
     for (size_t i = 0; i < vectors.size(); ++i) {
         if (!vectors[i].empty()) {
             minHeap.push({vectors[i][0], i, 0});
@@ -72,19 +72,19 @@ std::vector<int> mergeAndUniqueUsingMinHeap(const std::vector<std::vector<int>> 
     }
 
     std::vector<int> result;
-    int last_added = INT_MIN;  // 用于去重，初始化为一个不可能的值
+    int last_added = INT_MIN;  
 
     while (!minHeap.empty()) {
         Element current = minHeap.top();
         minHeap.pop();
 
-        // 只有当当前值与最后加入的值不同，才添加到结果中
+        
         if (result.empty() || current.value != last_added) {
             result.push_back(current.value);
             last_added = current.value;
         }
 
-        // 如果当前vector还有元素，把下一个元素加入堆
+        
         if (current.elemIndex + 1 < vectors[current.vecIndex].size()) {
             minHeap.push({vectors[current.vecIndex][current.elemIndex + 1], current.vecIndex, current.elemIndex + 1});
         }
@@ -185,7 +185,7 @@ void Partitioner::runPartition(ptree::Graph &graph, const string &algo) {
             if (not graph[t].visited) {
                 que.push(graph[t]);
                 graph[t].visited = true;
-                // tmpBlk.crossOutEdge += graph.out_degree(v.id);
+                
             }
         }
         auto checkRes = checkCondition(blocks[partitionIdx]);
@@ -194,9 +194,9 @@ void Partitioner::runPartition(ptree::Graph &graph, const string &algo) {
         }
     }
 
-    // this->borderGlobal2Local = vector<int>(graph.num_vertices(), -1);
+    
     double cutedge = 0;
-    // 处理边界节点
+    
     for (int i = 0; i < graph.num_vertices(); i++) {
         for (auto t : graph.out_edges(i)) {
             int idx = graph[i].partition;
@@ -226,44 +226,22 @@ void Partitioner::runLocalReachability() {
 }
 
 void Partitioner::runBorderReachability(ptree::Graph &graph) {
-    // 预先分配好节点
+    
     LOG("before allocate, node size = {}", this->eqClassGraph.num_vertices());
-    for (int i = 0; i < blocks.size(); i++) {
-        // blocks[i]->allocateID(this->eqClassGraph);
-    }
-    LOG("after allocate, node size = {}", this->eqClassGraph.num_vertices());
-
-    // // 看一眼边界图的映射
-    // LOG("mapping");
-    // for (auto p : this->borderGlobal2Local) {
-    //     cout << p.first << " --> " << p.second << "\n";
-    // }
-    // 虚拟in节点只能出现一次
-    for (size_t i = 0; i < blocks.size(); i++) {
-        // blocks[i]->ExemptBorderNode(this->threshold, this->eqClassGraph, s);
-    }
-
-    LOG("allocate EQclass Border Node done, #Nodes = {}", this->eqClassGraph.num_vertices());
-
-    // 1. 构建块内部的联通关系
+    
 #ifdef MTHREAD
 #pragma omp parallel for
 #endif
     for (int i = 0; i < blocks.size(); i++) {
-        // blocks[i]->buildBorderLink2(this->borderGraph, this->eqClassGraph, this->borderGlobal2Local, graph,
-        //                             this->blocks);
-        // blocks[i]->buildBorderLink(this->borderGraph, this->borderGlobal2Local, graph, this->blocks);
         blocks[i]->buildBorderLink3(this->eqClassGraph, graph, this->blocks);
-        // blocks[i]->buildBorderPatch(this->borderGraph, this->eqClassGraph, this->borderGlobal2Local, graph,
-        //                             this->blocks);
     }
 
-    // 连接外部关系 out eqclass->in eqclass
+    
     LOG("[AFTER] eq vertex size = {}, edge size = {}", eqClassGraph.num_vertices(), eqClassGraph.num_edges());
     this->index_size += eqClassGraph.num_edges();
     this->index_size += eqClassGraph.num_vertices();
 #ifdef PathTreeBorder
-    // 2. 用paththee计算边界点的可达性
+    
     LOG("Border #construction begin");
     auto &g = this->eqClassGraph;
     int gsize = g.num_vertices();
@@ -279,7 +257,7 @@ void Partitioner::runBorderReachability(ptree::Graph &graph) {
     LOG("cnt1 = {}, cnt2 = {}, cnt3 = {}", cnt1, cnt2, cnt3);
 
 #ifdef TWOHOPBORDER
-    // 需要给每个点加上一个时间戳，正常排序即可，无特殊意义
+    
     if (this->eqClassGraph.num_vertices() == 0) {
         return;
     }
@@ -295,7 +273,7 @@ void Partitioner::runBorderReachability(ptree::Graph &graph) {
 #endif
 }
 
-// 需要使用拓扑排序进行标签赋值
+
 void Partitioner::LabelGraph(ptree::Graph &graph) {
     int start_time = 1;
     auto vec = graph.topological_sort();
@@ -313,9 +291,9 @@ void Block::allocateID(ptree::Graph &borderGraph) {
     int osize = borderClassOut.size();
     int insize = borderClassIn.size();
 #endif
-    // if (osize == 0) {
-    //     return;
-    // }
+    
+    
+    
     int borderGraphSize = borderGraph.num_vertices();
     int lastOneID = borderGraphSize + osize - 1;
     borderGraph.addVertex(lastOneID);
@@ -378,7 +356,7 @@ void Block::buildBorderLink2(ptree::Graph &borderGraph, ptree::Graph &eqClassGra
         }
     }
 #else
-    // 所有的out衍生虚拟节点全部连起来
+    
     for (int i = 0; i < borderClassOut.size(); i++) {
         auto &borders = this->borderClassOut[i];
         auto src = this->sout[i];
@@ -411,27 +389,27 @@ void Block::buildBorderPatch(ptree::Graph &borderGraph, ptree::Graph &eqClassGra
                              std::unordered_map<int, int> &borderGlobal2Local, ptree::Graph &g,
                              std::vector<Block *> &blocks) {
 #ifdef INNODE
-    // for (int i = 0; i < borderClassOut.size(); i++) {
-    //     auto &borders = this->borderClassOut[i];
-    //     // 拿到当前另一个方向的虚拟编号
-    //     auto src = this->sin[i];
-    //     for (auto bnode : borders) {
-    //         for (auto node : borderGraph.out_edges(bnode)) {
-    //             auto dst_partition = borderGraph[node].partition;
-    //             auto dst = blocks[dst_partition]->getEqGraphID(borderGraph[node].gid);
-    //             if (dst < 0) {
-    //                 continue;
-    //             }
-    //             uint64_t mergeValue = MERGE_TO_UINT64(src, dst);
-    //             if (s.count(mergeValue) > 0) {
-    //                 continue;
-    //             }
-    //             s.insert(mergeValue);
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
-    //             eqClassGraph.addEdge(src, dst);
-    //         }
-    //     }
-    // }
+    
+    
+    
+    
     for (int i = 0; i < borderClassOut.size(); i++) {
         auto &borders = this->borderClassOut[i];
         std::unordered_set<uint64_t> s;
@@ -459,7 +437,7 @@ void Block::buildBorderLink3(ptree::Graph &eqClassGraph, ptree::Graph &g, std::v
     for (auto inNode : this->borderIn) {
         auto gid = localGraph[inNode].gid;
         if (global_partition->SingleNode2EqGraphNode.find(gid) != global_partition->SingleNode2EqGraphNode.end()) {
-            // in边界点和自己的等价类连起来
+            
             auto src = global_partition->SingleNode2EqGraphNode[gid];
             auto dst = localGraph[inNode].borderOutIdx;
             if (src >= 0 and dst >= 0) {
@@ -471,19 +449,19 @@ void Block::buildBorderLink3(ptree::Graph &eqClassGraph, ptree::Graph &g, std::v
 }
 
 void Block::ExemptBorderNode(int threshold, ptree::Graph &eqClassGraph, unordered_map<int, int> &s) {
-    // 找到需要豁免的边界点，并且分配eqClass节点
+    
     for (auto &it : this->extraTable) {
-        // it.first = 边界图lid
+        
         if (it.second.size() > threshold) {
             if (s.find(it.first) != s.end()) {
-                // this->selectedNodes.insert({it.first, s[it.first]});
+                
             } else {
-                // 分配一个id并记录下来
+                
                 auto id = eqClassGraph.num_vertices();
                 eqClassGraph.addVertex(id);
-                // this->selectedNodes.insert(make_pair(it.first, id));
+                
                 s.insert({it.first, id});
-                // LOG("exempt code = {}", it.first);
+                
             }
         }
     }
@@ -493,21 +471,21 @@ void Block::SplitEqNode(int threshold) {}
 
 void Block::buildBorderLink(ptree::Graph &borderGraph, std::unordered_map<int, int> &borderGlobal2Local,
                             ptree::Graph &g, std::vector<Block *> &blocks) {
-    // 只构建虚拟节点的连接
-    // key = oidx, value = 虚拟节点的id
-    // std::unordered_map<int, int> s;
+    
+    
+    
     std::unordered_set<int> s;
     int size = localGraph.num_vertices();
 #ifdef INNODE
     for (int i = 0; i < size; i++) {
-        // 连接该节点与相关的out节点
+        
         if (localGraph[i].border_out) {
 #ifdef NOEQCLASS
             int gid = localGraph[i].gid;
             for (auto &node : this->borderIn) {
                 if (this->pt->reach(node, i)) {
                     borderGraph.addEdge(borderGlobal2Local[this->localGraph[node].gid], borderGlobal2Local[gid]);
-                    // borderGraph.addEdge(borderGlobal2Local[gid], );
+                    
                 }
             }
 #else
@@ -517,28 +495,28 @@ void Block::buildBorderLink(ptree::Graph &borderGraph, std::unordered_map<int, i
                 continue;
             }
             if (s.count(oidx) == 0) {
-                // 加入集合、新建虚拟节点的连接关系
+                
                 s.insert(oidx);
                 auto idx = this->sout[oidx];
 
-                // 新增一个虚拟节点
-                // auto idx = borderGraph.num_vertices();
+                
+                
                 s.insert(oidx);
-                // borderGraph.addVertex(idx);
-                // cout << idx << "  " << borderGraph.num_vertices() << "\n";
+                
+                
                 int gid = localGraph[i].gid;
-                // 和虚拟节点相连
+                
                 borderGraph.addEdge(idx, borderGlobal2Local[gid]);
-                // 虚拟节点再和out边界点相连
+                
                 auto out_nodes = this->borderClassIn[oidx];
                 for (auto dst_bid : out_nodes) {
                     borderGraph.addEdge(dst_bid, idx);
                 }
             } else {
-                // auto idx = s[oidx];
+                
                 auto idx = this->sout[oidx];
                 int gid = localGraph[i].gid;
-                // 和虚拟节点相连
+                
                 borderGraph.addEdge(idx, borderGlobal2Local[gid]);
             }
 #endif
@@ -546,7 +524,7 @@ void Block::buildBorderLink(ptree::Graph &borderGraph, std::unordered_map<int, i
     }
 #else
     for (int i = 0; i < size; i++) {
-        // 连接该节点与相关的out节点
+        
         if (localGraph[i].border_in) {
 #ifdef NOEQCLASS
             int gid = this->local2global[i];
@@ -562,37 +540,37 @@ void Block::buildBorderLink(ptree::Graph &borderGraph, std::unordered_map<int, i
                 continue;
             }
             if (s.count(oidx) == 0) {
-                // 加入集合、新建虚拟节点的连接关系
+                
                 s.insert(oidx);
                 auto idx = this->sout[oidx];
 
-                // 新增一个虚拟节点
-                // auto idx = borderGraph.num_vertices();
+                
+                
                 s.insert(oidx);
-                // borderGraph.addVertex(idx);
-                // cout << idx << "  " << borderGraph.num_vertices() << "\n";
-                // int gid = this->local2global[i];
+                
+                
+                
                 int gid = localGraph[i].gid;
-                // 和虚拟节点相连
+                
                 borderGraph.addEdge(borderGlobal2Local[gid], idx);
-                // 虚拟节点再和out边界点相连
+                
                 auto out_nodes = this->borderClassOut[oidx];
                 for (auto dst_bid : out_nodes) {
                     borderGraph.addEdge(idx, dst_bid);
                 }
             } else {
-                // auto idx = s[oidx];
+                
                 auto idx = this->sout[oidx];
                 int gid = localGraph[i].gid;
 
-                // 和虚拟节点相连
+                
                 borderGraph.addEdge(borderGlobal2Local[gid], idx);
             }
-            // auto out_nodes = this->borderClassOut[oidx];
-            // int gid = this->local2global[i];
-            // for (auto dst_bid : out_nodes) {
-            //     borderGraph.addEdge(borderGlobal2Local[gid], dst_bid);
-            // }
+            
+            
+            
+            
+            
 #endif
         }
     }
@@ -638,7 +616,7 @@ bool TopChainBlock::query(int src, int dst) {
     }
     auto u = gt.getFrom(s, start, end);
     auto w = gt.getTo(d, start, end);
-    // cout<<src<<" "<<dst<<" "<<u<<" "<<w<<"\n";
+    
 
     bool arrive;
     if (u < 0 || w < 0) {
@@ -667,11 +645,11 @@ bool file_exists(const std::string &filename) {
 void queryTransform(BiGraph &bg, ptree::Graph &g, int u, int w, time_t start, time_t end, int &src, int &dst) {
     int v1 = -1;
     int v2 = -1;
-    // cout << __FILE__ << ":" << __LINE__ << "\n";
-    // 找到u在start时刻之后的第一个位置v1
+    
+    
     for (int i = 0; i < bg.adj_matrix_u[u].size(); i++) {
         if (bg.timeSection_u[u][i].second <= start) {
-            // cout << __FILE__ << ":" << __LINE__ << "\n";
+            
             if (i == 0) {
                 break;
             }
@@ -701,14 +679,14 @@ void queryTransform(BiGraph &bg, ptree::Graph &g, int u, int w, time_t start, ti
             }
             if (bg.timeTable_u[v1].empty() && k == -1) {
                 v1 = -1;
-                // cout << __FILE__ << ":" << __LINE__ << ":" << i << "---" << k <<
-                // endl;
+                
+                
             }
             break;
         }
     }
 
-    // 找打w在end时刻之前的最后的位置v2
+    
     int pos2;
     for (int i = 0; i < bg.adj_matrix_u[w].size(); i++) {
         if (bg.timeSection_u[w][i].first < end) {
@@ -723,7 +701,7 @@ void queryTransform(BiGraph &bg, ptree::Graph &g, int u, int w, time_t start, ti
                 pos2 = i;
             }
 
-            // v2 = bg.adj_matrix_u[w][i - 1];
+            
             int k = i - 1;
             while (bg.timeTable_u[v2].empty() && k >= 0) {
                 v2 = bg.adj_matrix_u[w][k];
@@ -737,21 +715,21 @@ void queryTransform(BiGraph &bg, ptree::Graph &g, int u, int w, time_t start, ti
         }
     }
 
-    // LOG("v1 = {}, v2 = {}", v1, v2);
+    
     if (v1 == -1 || v2 == -1) {
         src = -1;
         dst = -1;
         return;
     }
 
-    // for (auto t : bg.timeTable_u[v1]) cout << "[" << t.first << " " << t.second
-    // << "],"; cout << endl;
+    
+    
 
     int v1_idx = -1;
     time_t mm = std::numeric_limits<time_t>::max();
-    //   auto iter = std::lower_bound(
-    //       bg.timeTable_u[v1].begin(), bg.timeTable_u[v1].end(), start,
-    //       [](const auto &a, const auto &b) { return a.second < b; });
+    
+    
+    
 
     for (int i = 0; i < bg.timeTable_u[v1].size(); i++) {
         if (bg.timeTable_u[v1][i].second > start) {
@@ -762,26 +740,26 @@ void queryTransform(BiGraph &bg, ptree::Graph &g, int u, int w, time_t start, ti
         }
     }
 
-    //   if (iter != bg.timeTable_u[v1].end()) {
-    //     v1_idx = iter - bg.timeTable_u[v1].begin();
-    //   }
+    
+    
+    
     if (v1_idx >= 0) {
     } else {
         src = -1;
         dst = -1;
         return;
     }
-    // auto iter = std::lower_bound(bg.timeTable_u[v1].begin(),
-    // bg.timeTable_u[v1].end(), start); if (iter != bg.timeTable_u[v1].end()) {
-    //     v1_idx = iter - bg.timeTable_u[v1].begin();
-    // } else {
-    //     v1_idx = iter - bg.timeTable_u[v1].begin() - 1;
-    // }
-    // // cout << __FILE__ << ":" << __LINE__ << "\n";
+    
+    
+    
+    
+    
+    
+    
     int v2_idx = -1;
-    //   auto iter = std::lower_bound(
-    //       bg.timeTable_u[v2].begin(), bg.timeTable_u[v2].end(), end,
-    //       [](const auto &a, const auto &b) { return a.second < b; });
+    
+    
+    
     mm = 0;
 
     for (int i = 0; i < bg.timeTable_u[v2].size(); i++) {
@@ -794,39 +772,39 @@ void queryTransform(BiGraph &bg, ptree::Graph &g, int u, int w, time_t start, ti
     }
 
     if (v2_idx >= 0) {
-        // v2_idx = iter - bg.timeTable_u[v2].begin();
+        
     } else {
         src = -1;
         dst = -1;
         return;
-        // DEBUG("v1 = {}, v1_idx = {}, start = {}, estart = {}, eend = {}, cstart =
-        // {}, cend = {}", v2, v2_idx, start,
-        //       bg.timeTable_u[v2][v2_idx].first,
-        //       bg.timeTable_u[v2][v2_idx].second, bg.timeSection_u[u][pos2].first,
-        //       bg.timeSection_u[u][pos2].second);
-        // for (auto t : bg.timeTable_u[v2]) {
-        //     cout << "[" << t.first << " " << t.second << "],";
-        // }
-        // cout << endl;
-        // exit(0);
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
     }
-    // iter = std::lower_bound(bg.timeTable_u[v2].begin(),
-    // bg.timeTable_u[v2].end(), end); if (iter != bg.timeTable_u[v2].begin()) {
-    //     v2_idx = iter - bg.timeTable_u[v2].begin() - 1;
-    // } else {
-    //     v2_idx = iter - bg.timeTable_u[v2].begin();
-    // }
+    
+    
+    
+    
+    
+    
 
     src = g.cnum(make_pair(v1, bg.timeTable_u[v1][v1_idx].first));
-    // cout << __FILE__ << ":" << __LINE__ << "\n";
+    
     dst = g.cnum(make_pair(v2, bg.timeTable_u[v2][v2_idx].first));
-    // if (src == 0 or dst == 0) {
-    //     cout << v1 << " ==== " << bg.timeTable_u[v1][v1_idx] << "\n";
-    //     cout << bg.timeTable_u[v1].size() << "  " << v1_idx << "\n";
-    //     cout << v2 << " ==== " << bg.timeTable_u[v2][v2_idx] << "\n";
-    //     cout << bg.timeTable_u[v2].size() << "  " << v2_idx << "\n";
-    // }
-    // cout << __FILE__ << ":" << __LINE__ << "\n";
+    
+    
+    
+    
+    
+    
+    
 }
 
 #ifdef NEWSETTING
@@ -854,10 +832,10 @@ void queryTransform(BiGraph &bg, ptree::Graph &g, int u, int w, time_t start, ti
         }
     }
 
-    // cout<<bg.timeSection_u[u].size()<<"\n";
+    
     for (int i = 0; i < bg.timeSection_u[u].size(); i++)
         if (bg.timeSection_u[u][i].first < end && bg.timeSection_u[u][i].second >= end) {
-            // LOG("i = {}, size = {}",i,bg.timeSection_u[u].size());
+            
             v2s.push_back(bg.adj_matrix_u[u][i]);
         }
 
@@ -873,7 +851,7 @@ void queryTransform(BiGraph &bg, ptree::Graph &g, int u, int w, time_t start, ti
         if (v2 >= 0) {
             for (int i = v2; i >= 0; i--)
                 if (bg.timeSection_u[u][i].second > min_start) {
-                    // cout<<i<<"  "<<bg.timeSection_u[u].size()<<"=\n";
+                    
                     v2s.push_back(bg.adj_matrix_u[u][i]);
                 }
         }
@@ -898,7 +876,7 @@ void queryTransform(BiGraph &bg, ptree::Graph &g, int u, int w, time_t start, ti
     for (auto v2 : v2s) {
         int v2_idx = -1;
         time_t mm = 0;
-        // LOG("v2 = {}, timeTable_u size = {}",v2,bg.timeTable_u.size());
+        
         for (int i = 0; i < bg.timeTable_u[v2].size(); i++)
             if (bg.timeTable_u[v2][i].first < end)
                 if (bg.timeTable_u[v2][i].first > mm) {
@@ -952,7 +930,7 @@ bool dfs(ptree::Graph &graph, int gid, Partitioner *p) {
 
 void Partitioner::runQueryWithBfs(BiGraph &bg, ptree::Graph &graph, std::vector<CCR::queryInfo> &queryInfo,
                                   std::vector<int> &queryRes) {
-    // Bi BFS
+    
     LOG("query start");
     std::unordered_set<int64_t> s;
 
@@ -973,7 +951,7 @@ void Partitioner::runQueryWithBfs(BiGraph &bg, ptree::Graph &graph, std::vector<
         auto w = info.w;
         auto start = info.start;
         auto end = info.end;
-        // 开始时间晚于结束时间，查询结果为假
+        
         if (start > end) {
             queryRes[idx - 1] = false;
             continue;
@@ -988,7 +966,7 @@ void Partitioner::runQueryWithBfs(BiGraph &bg, ptree::Graph &graph, std::vector<
         }
 
         if (graph[src].partition == graph[dst].partition) {
-            // sum_pt_query++;
+            
             if (this->blocks[graph[src].partition]->query(src, dst)) {
                 queryRes[idx - 1] = true;
                 cnt1++;
@@ -1007,9 +985,7 @@ void Partitioner::runQueryWithBfs(BiGraph &bg, ptree::Graph &graph, std::vector<
         }
         int sum = 0;
 #ifdef TWOHOPBORDER
-        // queryRes[idx - 1] = runBiBFSBy2Hop(q1hi, q2hi, sum, idx);
         queryRes[idx - 1] = runIndexQuery(src, dst);
-        // LOG("res = {}", queryRes[idx - 1]);
 #elif defined PathTreeBorder
         queryRes[idx - 1] = runPTQuery(src, dst);
 #else
@@ -1021,15 +997,7 @@ void Partitioner::runQueryWithBfs(BiGraph &bg, ptree::Graph &graph, std::vector<
         }
         queryRes[idx - 1] = runBiBFS(src, dst, sum, idx);
 #endif
-        // t3.ticker();
-        // sum3 += t3.get_last_consuming();
-        // LOG("bfs layer = {}, reach = {}",sum,queryRes[idx-1]);
-        sum_bfs++;
-        if (queryRes[idx - 1]) {
-            sum_bfs_reach++;
-        }
     }
-    LOG("bfs query {}, reach {}, cnt1 = {}", sum_bfs, sum_bfs_reach, cnt1);
 }
 
 int Partitioner::getInBorder(int dst, ptree::Graph &graph) {
@@ -1088,9 +1056,8 @@ bool Partitioner::runBiBFSBy2Hop(int q1hi, int q2hi, int &sum, int idx) {
         return false;
     }
     bool arrive = false;
-    // 纯单向出发了
 #ifdef INNODE
-    int dst = que2[q2hi - 1];  // 实际上就一个元素
+    int dst = que2[q2hi - 1]; 
     int q1lo = 0;
     while (q1hi > q1lo) {
         auto src = que1[q1lo++];
@@ -1147,10 +1114,7 @@ bool Partitioner::runBiBFSBy2Hop(int q1hi, int q2hi, int &sum, int idx) {
 }
 
 bool Partitioner::runBiBFS(int src, int dst, int &sum, int idx) {
-    // get border graph
-    // auto &g = this->borderGraph;
     auto &g = this->eqClassGraph;
-    // std::vector<int> visited(borderGraph.num_vertices(), 0);
     int q1lo = 0;
     int q2lo = 0;
     int q1hi = 1;
@@ -1161,9 +1125,7 @@ bool Partitioner::runBiBFS(int src, int dst, int &sum, int idx) {
     sum = 0;
     while (q1lo < q1hi and q2lo < q2hi) {
         sum++;
-        // DEBUG("in run bfs, src size = {}, dst size = {}", q1hi - q1lo, q2hi -
-        // q2lo); unordered_set<int> temp;
-        // 正向走，visited 为 1
+       
         if (q1hi - q1lo < q2hi - q2lo) {
             auto origin = q1hi;
             for (int i = q1lo; i < origin; i++) {
@@ -1177,7 +1139,6 @@ bool Partitioner::runBiBFS(int src, int dst, int &sum, int idx) {
                         return true;
                     } else if (visited_outter[edge] != idx) {
                         visited_outter[edge] = idx;
-                        // temp.insert(edge);
                         this->que1[q1hi++] = edge;
                     }
                 }
@@ -1194,7 +1155,6 @@ bool Partitioner::runBiBFS(int src, int dst, int &sum, int idx) {
                     if (visited_outter[edge] == idx) {
                         return true;
                     } else if (visited_outter[edge] != -idx) {
-                        // temp.insert(edge);
                         visited_outter[edge] = -idx;
                         this->que2[q2hi++] = edge;
                     }
@@ -1218,7 +1178,7 @@ string printVector(vector<int> &vec) {
 void Block::allocateBaseEqClass(ptree::Graph &eqGraph, ptree::Graph &graph) {
     std::unordered_map<size_t, int> &table = global_partition->GlobalRecordTableOut;
     std::unordered_map<size_t, int> &table2 = global_partition->GlobalRecordTableIn;
-    // 分配base单点
+    
     for (int i = 0; i < localGraph.num_vertices(); i++) {
         if (localGraph[i].border_in) {
             if (global_partition->SingleNode2EqGraphNode.find(localGraph[i].gid) ==
@@ -1229,7 +1189,6 @@ void Block::allocateBaseEqClass(ptree::Graph &eqGraph, ptree::Graph &graph) {
                 vector<uint64_t> tmp_vec(this->global_partition->bitElemNumber, 0);
                 auto gid = localGraph[i].gid;
                 setBitAtPosition(tmp_vec, graph[gid].global_order);
-                // graph[gid].bits = tmp_vec;
                 auto hash_res = hash_vector(tmp_vec);
                 table[hash_res] = idx;
                 table2[hash_res] = idx;
@@ -1239,15 +1198,12 @@ void Block::allocateBaseEqClass(ptree::Graph &eqGraph, ptree::Graph &graph) {
 }
 
 void Partitioner::ComputeBorder(ptree::Graph &graph) {
-    // 把下一个分区的节点也纳入进来
-    // 先做正向，反向不一定要做
     unordered_set<int> table;
     for (int i = 0; i < graph.num_vertices(); i++) {
         for (auto edge : graph.out_edges(i)) {
             if (graph[i].partition != graph[edge].partition) {
                 int idx = graph[i].partition;
                 int toidx = graph[edge].partition;
-                // 加点加边
                 blocks[idx]->addNode(graph[edge]);
                 blocks[idx]->addEdge(i, edge);
 
@@ -1258,16 +1214,6 @@ void Partitioner::ComputeBorder(ptree::Graph &graph) {
                     table.insert(edge);
                     graph[edge].global_order = table.size() - 1;
                 }
-
-                // auto &lgraph = blocks[toidx]->localGraph;
-                // for (auto edge2 : graph.out_edges(edge)) {
-                //     if (graph[edge2].partition == graph[edge].partition and
-                //         lgraph[blocks[toidx]->global2local[edge2]].border_in and
-                //         graph[edge2].inParitionRecord.find(idx) != graph[edge2].inParitionRecord.end()) {
-                //         blocks[idx]->addNode(graph[edge2]);
-                //         blocks[idx]->addEdge(edge, edge2);
-                //     }
-                // }
             }
         }
     }
@@ -1308,7 +1254,6 @@ void Block::fetchClass(std::unordered_map<int, int> &borderGlobal2Local) {}
 void Block::fetchClassByPT(std::unordered_map<int, int> &borderGlobal2Local) {}
 
 void Block::fetchClassByBorderBFSIn(ptree::Graph &eqGraph, ptree::Graph &graph) {
-    // 从入边界点进行处理
     std::unordered_map<size_t, int> &table2 = global_partition->GlobalRecordTableIn;
     std::unordered_map<size_t, int> &table1 = global_partition->GlobalRecordTableOut;
 
@@ -1322,9 +1267,6 @@ void Block::fetchClassByBorderBFSIn(ptree::Graph &eqGraph, ptree::Graph &graph) 
     int lo = 0;
     int hi = 0;
     for (auto border_node : this->borderIn) {
-        // if (localGraph.in_degree(border_node) != 0) {
-        //     continue;
-        // }
         auto gid = localGraph[border_node].gid;
         graph[gid].bits = vector<uint64_t>(this->global_partition->bitElemNumber, 0);
         setBitAtPosition(graph[gid].bits, graph[gid].global_order);
@@ -1359,7 +1301,7 @@ void Block::fetchClassByBorderBFSIn(ptree::Graph &eqGraph, ptree::Graph &graph) 
 
     while (lo < hi) {
         auto node = que[lo++];
-        // 收集自己出边传来的class信息
+        
         std::vector<std::vector<int>> allCandidate;
         allCandidate.reserve(1 + border_degree[node]);
 
@@ -1368,13 +1310,6 @@ void Block::fetchClassByBorderBFSIn(ptree::Graph &eqGraph, ptree::Graph &graph) 
             buffer[node].push_back(global_partition->SingleNode2EqGraphNode[gid]);
         }
 
-        // 归并来自子节点的
-        // for (auto &kid : buffer[node]) {
-        //     allCandidate.push_back(this->global_partition->borderClassIn[kid]);
-        // }
-
-        // 归并且去重
-        // auto res = mergeAndUniqueUsingMinHeap(allCandidate);
         auto gid = localGraph[node].gid;
         auto res = graph[gid].bits;
         auto hash_res = hash_vector(res);
@@ -1382,18 +1317,15 @@ void Block::fetchClassByBorderBFSIn(ptree::Graph &eqGraph, ptree::Graph &graph) 
         if (table2.find(hash_res) == table2.end()) {
             int idx = eqGraph.num_vertices();
             eqGraph.addVertex(idx);
-            // global_partition->GlobalSin.insert({idx, idx});
             for (auto &kid : buffer[node]) {
-                // int dst = global_partition->GlobalSin[kid];
                 int dst = kid;
                 eqGraph.addEdge(dst, idx);
             }
             table2[hash_res] = idx;
         }
-        // this->global_partition->borderClassIn.insert({table2[hash_res], res});
         localGraph[node].borderInIdx = table2[hash_res];
 
-        // 向前传递信息
+        
         for (auto outEdge : localGraph.out_edges(node)) {
             border_degree[outEdge]--;
             buffer[outEdge].push_back(table2[hash_res]);
@@ -1432,10 +1364,7 @@ void Block::fetchClassByBorderBFSOut(ptree::Graph &eqGraph, ptree::Graph &graph)
             continue;
         }
         que[hi++] = border_node;
-        // visited[border_node] = 1;
     }
-    // 1.2 收集one hop有哪些节点
-    // 1.3 遍历整图收集边界degree
     while (lo < hi) {
         auto node = que[lo++];
         for (auto inEdge : localGraph.in_edges(node)) {
@@ -1454,8 +1383,6 @@ void Block::fetchClassByBorderBFSOut(ptree::Graph &eqGraph, ptree::Graph &graph)
         }
     }
 
-    // 3. 反向bfs
-    // 3.1 先把source找好
     lo = 0;
     hi = 0;
     for (auto border_node : this->borderOut) {
@@ -1466,7 +1393,6 @@ void Block::fetchClassByBorderBFSOut(ptree::Graph &eqGraph, ptree::Graph &graph)
 
     while (lo < hi) {
         auto node = que[lo++];
-        // 收集自己出边传来的class信息
         std::vector<std::vector<int>> allCandidate;
         allCandidate.reserve(1 + border_degree[node]);
         auto gid = localGraph[node].gid;
@@ -1477,37 +1403,24 @@ void Block::fetchClassByBorderBFSOut(ptree::Graph &eqGraph, ptree::Graph &graph)
             setBitAtPosition(graph[gid].bits, graph[gid].global_order);
             buffer[node].push_back(global_partition->SingleNode2EqGraphNode[localGraph[node].gid]);
         }
-        // 归并来自子节点的
-
-        // for (auto &kid : buffer[node]) {
-        //     allCandidate.push_back(this->global_partition->borderClassOut[kid]);
-        // }
-        // 归并且去重
-        // auto res = mergeAndUniqueUsingMinHeap(allCandidate);
+       
         auto &res = graph[gid].bits;
         auto hash_res = hash_vector(res);
 
         if (table.find(hash_res) == table.end()) {
-            // 组成了新的等价类
-            // 添加节点
+           
             int idx = eqGraph.num_vertices();
             eqGraph.addVertex(idx);
             global_partition->GlobalSout.insert({idx, idx});
-            // 前缀树连接边
-            // buffer存的等价类编号
             for (auto &kid : buffer[node]) {
-                // 获取kid所代表的全局节点
                 int dst = kid;
                 eqGraph.addEdge(idx, dst);
             }
-
-            // this->global_partition->borderClassOut.emplace_back(res);
-            // this->global_partition->borderClassOut.insert({idx, res});
             table[hash_res] = idx;
         }
         localGraph[node].borderOutIdx = table[hash_res];
 
-        // 向前传递信息
+        
         for (auto inEdge : localGraph.in_edges(node)) {
             border_degree[inEdge]--;
             buffer[inEdge].push_back(table[hash_res]);
@@ -1531,7 +1444,6 @@ void Block::fetchClassByBorderBFSOut(ptree::Graph &eqGraph, ptree::Graph &graph)
 }
 
 void Block::fetchClassByBorderBFS(std::unordered_map<int, int> &borderGlobal2Local) {
-    // 1 反向遍历graph,记录每个节点的边界出度
     std::unordered_map<size_t, int> table;
     int size = localGraph.num_vertices();
     LOG("fetchClassByBorderBFS, total node = {}", size);
@@ -1548,10 +1460,7 @@ void Block::fetchClassByBorderBFS(std::unordered_map<int, int> &borderGlobal2Loc
             continue;
         }
         que[hi++] = border_node;
-        // visited[border_node] = 1;
     }
-    // 1.2 收集one hop有哪些节点
-    // 1.3 遍历整图收集边界degree
     while (lo < hi) {
         auto node = que[lo++];
         for (auto inEdge : localGraph.in_edges(node)) {
@@ -1570,8 +1479,8 @@ void Block::fetchClassByBorderBFS(std::unordered_map<int, int> &borderGlobal2Loc
         }
     }
 
-    // 3. 反向bfs
-    // 3.1 先把source找好
+    
+    
     lo = 0;
     hi = 0;
     for (auto border_node : this->borderOut) {
@@ -1582,36 +1491,36 @@ void Block::fetchClassByBorderBFS(std::unordered_map<int, int> &borderGlobal2Loc
 
     while (lo < hi) {
         auto node = que[lo++];
-        // 收集自己出边传来的class信息
+        
         std::vector<std::vector<int>> allCandidate;
         allCandidate.reserve(1 + border_degree[node]);
         if (localGraph[node].border_out) {
             allCandidate.push_back({borderGlobal2Local[localGraph[node].gid]});
         }
-        // 归并来自子节点的
+        
 
         for (auto &kid : buffer[node]) {
             allCandidate.push_back(this->borderClassOut[kid]);
         }
-        // 归并且去重
+        
         auto res = mergeAndUniqueUsingMinHeap(allCandidate);
         auto hash_res = hash_vector(res);
         if (table.find(hash_res) == table.end()) {
-            // 组成了新的等价类
+            
             int idx = this->borderClassOut.size();
             this->bufferO[idx].insert(buffer[node].begin(), buffer[node].end());
             this->borderClassOut.emplace_back(res);
             table[hash_res] = idx;
 #ifndef INNODE
-            // 遍历该等价类包含的所有边界点lid
-            // key = borderGraph lid, value = set of 等价类编号
+            
+            
             for (auto t : res) {
                 extraTable[t].insert(idx);
             }
 #endif
         }
         localGraph[node].borderOutIdx = table[hash_res];
-        // 向前传递信息
+        
         for (auto inEdge : localGraph.in_edges(node)) {
             border_degree[inEdge]--;
             buffer[inEdge].push_back(table[hash_res]);
@@ -1624,7 +1533,7 @@ void Block::fetchClassByBorderBFS(std::unordered_map<int, int> &borderGlobal2Loc
     this->eqClassVisitedO = vector<int>(table.size());
     LOG("after compact, out node = {}, table size = {}", this->borderClassOut.size(), table.size());
 
-    // 从入边界点进行处理
+    
     table = std::unordered_map<size_t, int>();
     lo = 0;
     hi = 0;
@@ -1654,30 +1563,30 @@ void Block::fetchClassByBorderBFS(std::unordered_map<int, int> &borderGlobal2Loc
     lo = 0;
     hi = 0;
     for (auto border_node : this->borderIn) {
-        // cout<<border_node<<" : degree = "<<border_degree[border_node]<<"\n";
+        
         if (border_degree[border_node] == 0) {
             que[hi++] = border_node;
         }
     }
 
     while (lo < hi) {
-        // LOG("lo = {}, hi ={}",lo,hi);
+        
         auto node = que[lo++];
-        // 收集自己出边传来的class信息
+        
         std::vector<std::vector<int>> allCandidate;
         allCandidate.reserve(1 + border_degree[node]);
         if (localGraph[node].border_in) {
             allCandidate.push_back({borderGlobal2Local[localGraph[node].gid]});
         }
-        // 归并来自子节点的
+        
 
         for (auto &kid : buffer[node]) {
             allCandidate.push_back(this->borderClassIn[kid]);
         }
-        // 归并且去重
+        
         auto res = mergeAndUniqueUsingMinHeap(allCandidate);
         auto hash_res = hash_vector(res);
-        // LOG("res size = {}",res.size());
+        
         if (table.find(hash_res) == table.end()) {
             this->index_size += res.size();
             this->index_size += res.size();
@@ -1686,8 +1595,8 @@ void Block::fetchClassByBorderBFS(std::unordered_map<int, int> &borderGlobal2Loc
             this->borderClassIn.emplace_back(res);
             table[hash_res] = idx;
 #ifdef INNODE
-            // 遍历该等价类包含的所有边界点lid
-            // key = borderGraph lid, value = set of 等价类编号
+            
+            
             for (auto t : res) {
                 extraTable[t].insert(idx);
             }
@@ -1695,7 +1604,7 @@ void Block::fetchClassByBorderBFS(std::unordered_map<int, int> &borderGlobal2Loc
         }
         localGraph[node].borderInIdx = table[hash_res];
 
-        // 向前传递信息
+        
         for (auto outEdge : localGraph.out_edges(node)) {
             border_degree[outEdge]--;
             buffer[outEdge].push_back(table[hash_res]);

@@ -8,3 +8,4 @@ script/memory*
 script/runDelta.sh
 script/runDelta_back.sh
 script/runQuery.sh
+.cache
