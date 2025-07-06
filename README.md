@@ -37,7 +37,7 @@ make -j8
 ```
 
 ### 📁 Dataset
-You can download the datasets from [here](https://bhpan.buaa.edu.cn/link/AA792B469DD0D64D699590D25932C6E29F).
+You can download the datasets from [here](https://drive.google.com/file/d/1CP_jigGHExmbNYWpxTBNR9-3JnBJraob/view?usp=sharing).
 
 <p align="center"> <img src="pictures/datasets.png" alt="Dataset" width="50%"> </p>
 
@@ -90,7 +90,7 @@ bash script/run.sh
 ```
 
 #### 2. Scalability Test
-To evaluate scalability, run the following script with the graph edit-enwiki([download here](https://bhpan.buaa.edu.cn/link/AA1FEBDB96E4DA451C91FC44213D5BBB9B)), including`[20% 40% 60% 80% 100%]`edges of the original graph size. Before running, ensure the dataset and query files are placed in the `dataset/bigraph` and `dataset/query` directories, respectively. 
+To evaluate scalability, run the following script with the graph edit-enwiki([download here](https://drive.google.com/file/d/1UtDSbiKA_9vMr4Wc94yECV-YqLskdW2M/view?usp=sharing)). We construct five subgraphs containing [20%, 40%, 60%, 80%, 100%] of the original graph’s edges. These subgraphs are created by exporting the first [20%, 40%, 60%, 80%] lines from the original graph file. Before running, ensure the dataset and query files are placed in the `dataset/bigraph` and `dataset/query` directories, respectively. 
 
 ```bash
 bash script/run_scalability.sh
