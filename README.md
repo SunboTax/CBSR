@@ -2,7 +2,7 @@
 
 **This is the official implementation of _CBSR: A Contraction Framework for Answering Reachability Queries on Temporal Bipartite Graphs_.**
 
-📄 The full paper is available at [GitHub (PDF)](https://github.com/dengt2000/SRPfull/blob/main/SRPfull.pdf).
+📄 The full paper is available at [GitHub (PDF)](https://github.com/SunboTax/CBSR/blob/master/paper-fullversion/paper.pdf).
 
 ## 🔍 Abstract
 CBSR addresses the problem of answering span-reachability problem for temporal bipartite graphs. By transforming the graph into a DAG and applying contraction-based indexing, CBSR enables efficient and scalable indexing and query processing. Experimental results on real-world datasets show that CBSR outperforms existing methods such as TopChain and TBP.
