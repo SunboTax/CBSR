@@ -143,12 +143,12 @@ The index construction process are divided into five phases:
 ### 2. Scalability Test
 
 The scalability test results show the performance of CBSR with varying graph sizes. The results are presented in the picture below, where the x-axis represents the percentage of edges used from the original graph size, and the y-axis shows the indexing time(s), the memory usage(GB) and the random generated query time(μs).
-<p align="center"> <img src="pictures/scale.png" alt="Scalability Test" width="80%"> </p>
+<p align="center"> <img src="pictures/scale.png" alt="Scalability Test" width="40%"> </p>
 
 ### 3. Fragment Number Impact
 The impact of the fragment number on the performance of CBSR is evaluated by varying the number of fragments from 1 to 64. The results are presented below, where IT, MU, PQT and NQT represent indexing time, memory us
 age, positive query time, and negative query time, respectively.
-<p align="center"> <img src="pictures/fragments.png" alt="Fragment Number Impact" width="55%"> </p>
+<p align="center"> <img src="pictures/fragments.png" alt="Fragment Number Impact" width="80%"> </p>
 
 
 ### 4. Latency Threshold Impact
@@ -166,7 +166,7 @@ This project is licensed under the [MIT License](./LICENSE.txt). You are free to
 
 For any questions or issues, feel free to contact via:
 - **e-mail**: sunlijun1@buaa.edu.cn or liaojunlong@buaa.edu.cn
-- github issues: [CBSR Issues](https://github.com/SunboTax/CBSR/issues)
+- **github issues**: [CBSR Issues](https://github.com/SunboTax/CBSR/issues)
 
 ## 📣 Citation
 If you find this work useful, please cite our paper:
@@ -176,6 +176,6 @@ If you find this work useful, please cite our paper:
   title        = {CBSR: A Contraction Framework for Answering Reachability Queries on Temporal Bipartite Graphs},
   year         = {2025},
   note         = {Manuscript under review},
-  howpublished = {\url{https://github.com/dengt2000/SRPfull/blob/main/SRPfull.pdf}}
+  howpublished = {\url{https://github.com/SunboTax/CBSR/blob/master/paper-fullversion/paper.pdf}}
 }
 ```
