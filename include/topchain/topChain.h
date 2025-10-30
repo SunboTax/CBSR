@@ -164,7 +164,7 @@ struct TopChainMeta {
     int maxDown = 0;
     int maxUp = 0;
     int mark = 0;
-    int *flag;
+    vector<int> flagVec;
 
     void readGraph(GraphT &gt) {
         n = gt.V;
@@ -602,7 +602,12 @@ struct TopChainMeta {
     bool intersect(const int u1, const int u2) {
         int p1 = 0;
         int p2 = reachindex[u2].OutLimit;
+
         while (p1 < reachindex[u1].OutLimit && p2 < reachindex[u2].InLimit) {
+            // cout << "u1 = " << u1 << " u2 = " << u2 << " p1 first = " << reachindex[u1].Label[p1].first
+            //      << " p2 first = " << reachindex[u2].Label[p2].first
+            //      << " p1 second = " << reachindex[u1].Label[p1].second
+            //      << " p2 second = " << reachindex[u2].Label[p2].second << endl;
             if (reachindex[u1].Label[p1].first == reachindex[u2].Label[p2].first &&
                 reachindex[u1].Label[p1].second <= reachindex[u2].Label[p2].second)
                 return 1;
@@ -679,41 +684,57 @@ struct TopChainMeta {
     }
 
     int countQuery = 0;
-    bool query(int from, int to) {
-        countQuery++;
-        flag[from] = mark;
 
-        if (reachindex[from].flabel1 > reachindex[to].flabel1 || reachindex[from].flabel2 > reachindex[to].flabel2)
+    bool query(int from, int to) {
+        if (from < 0 || to < 0) return 0;
+        if (from == to) return 1;
+        countQuery++;
+        flagVec[from] = mark;
+
+        // cout << "from = " << from << " to = " << to << " from flabel1 = " << reachindex[from].flabel1<<" from flabel2
+        // = " << reachindex[from].flabel2
+        //      << " to flabel1 = " << reachindex[to].flabel1<<" to flabel2 = " << reachindex[to].flabel2 << endl;
+        if (reachindex[from].flabel1 > reachindex[to].flabel1 || reachindex[from].flabel2 > reachindex[to].flabel2) {
             return 0;
-        if (IPtest(from, to)) return 0;
+        }
+        if (IPtest(from, to)) {
+            return 0;
+        }
 
         // intersect
-        if (intersect(from, to)) return 1;
+        if (intersect(from, to)) {
+            return 1;
+        }
 
-        for (int i = 0; i < v[from].size(); ++i) {
+        for (int i = v[from].size() - 1; i >= 0; --i) {
             int w = v[from][i];
-            if (w == to) return 1;
-            if (reachindex[w].Ldown < reachindex[to].Ldown && flag[w] != mark)
+            if (w == to) {
+                return 1;
+            }
+
+            if (reachindex[w].Ldown < reachindex[to].Ldown && (flagVec[w] != mark))
             //	if (flag[w]!=mark)
             {
-                if (query(w, to)) return 1;
+                if (query(w, to)) {
+                    return 1;
+                }
             }
         }
         return 0;
     }
     bool naiveQuery(int from, int to) {
-        flag[from] = mark;
-        if (from == to) return 1;
-        for (int i = 0; i < v[from].size(); ++i) {
-            int w = v[from][i];
-            if (flag[w] != mark) {
-                if (naiveQuery(w, to)) return 1;
-            }
-        }
+        // flag[from] = mark;
+        // if (from == to) return 1;
+        // for (int i = 0; i < v[from].size(); ++i) {
+        //     int w = v[from][i];
+        //     if (flag[w] != mark) {
+        //         if (naiveQuery(w, to)) return 1;
+        //     }
+        // }
         return 0;
     }
     void query(string s) {
-        flag = new int[n];
+        int *flag = new int[n];
         memset(flag, 0, sizeof(int) * n);
 
         // read query

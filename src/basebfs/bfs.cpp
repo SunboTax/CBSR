@@ -9,16 +9,18 @@
 
 #include "partition.h"
 
-void biBFS(BiGraph &bg, vector<CCR::queryInfo> &queryInfo, vector<int> &queryRes) {
+void biBFS(BiGraph& bg, vector<CCR::queryInfo>& queryInfo, vector<int>& queryRes)
+{
     LOG("Base BFS query start");
     int i = 0;
-    for (auto const &info : queryInfo) {
+    for (auto const& info : queryInfo) {
         auto res = biBFSWorker(bg, info);
         queryRes[i++] = res;
     }
 }
 
-bool biBFSWorker(BiGraph &bg, CCR::queryInfo info) {
+bool biBFSWorker(BiGraph& bg, CCR::queryInfo info)
+{
     auto u = info.u;
     auto w = info.w;
     auto start = info.start;
@@ -34,7 +36,8 @@ bool biBFSWorker(BiGraph &bg, CCR::queryInfo info) {
     Q.push(make_pair(u, start));
     // 到达某个上部点的最小时间
     vector<int> minT(bg.adj_matrix_u.size(), std::numeric_limits<int>::max());
-    vector<int> maxMinT(bg.adj_matrix_l.size(), std::numeric_limits<int>::max());
+    vector<int> maxMinT(bg.adj_matrix_l.size(),
+        std::numeric_limits<int>::max());
     minT[u] = 0;
 
     std::queue<pair<int, time_t>> P;
@@ -66,7 +69,7 @@ bool biBFSWorker(BiGraph &bg, CCR::queryInfo info) {
                             continue;
                         }
                     }
-                    vector<long> candi{u_, v, t1, t2};
+                    vector<long> candi { u_, v, t1, t2 };
                     auto hash_res = hash_vector(candi);
                     if (s.count(hash_res)) {
                         continue;
@@ -122,7 +125,7 @@ bool biBFSWorker(BiGraph &bg, CCR::queryInfo info) {
                     if (t2 > t_s) {
                         continue;
                     }
-                    vector<long> candi{u_, v, t1, t2};
+                    vector<long> candi { u_, v, t1, t2 };
                     auto hash_res = hash_vector(candi);
                     if (s.count(hash_res)) {
                         continue;

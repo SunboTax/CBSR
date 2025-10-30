@@ -98,13 +98,20 @@ class Block {
     void buildBorderPatch(ptree::Graph &borderGraph, ptree::Graph &eqGraph,
                           std::unordered_map<int, int> &borderGlobal2Local, ptree::Graph &g,
                           std::vector<Block *> &blocks);
-    void allocateBaseEqClass(ptree::Graph &eqGraph,ptree::Graph &graph);
+    void allocateBaseEqClass(ptree::Graph &eqGraph, ptree::Graph &graph);
+    void allocateBaseEqClass4PreCompute(ptree::Graph &eqGraph, ptree::Graph &graph);
 
     void fetchClass(std::unordered_map<int, int> &borderGlobal2Local);
     void fetchClassByPT(std::unordered_map<int, int> &borderGlobal2Local);
     void fetchClassByBorderBFS(std::unordered_map<int, int> &borderGlobal2Local);
-    void fetchClassByBorderBFSOut(ptree::Graph &eqGraph,ptree::Graph &graph);
-    void fetchClassByBorderBFSIn(ptree::Graph &eqGraph,ptree::Graph &graph);
+    void fetchClassByBorderBFSOut(ptree::Graph &eqGraph, ptree::Graph &graph);
+    int fetchClassByBorderBFSOut4PreCompute(ptree::Graph &eqGraph, ptree::Graph &graph);
+    void fetchClassByBorderBFSIn(ptree::Graph &eqGraph, ptree::Graph &graph);
+    int fetchClassByBorderBFSIn4PreCompute(ptree::Graph &eqGraph, ptree::Graph &graph);
+
+    void fetchClassByBorderBFSOutNoEq(ptree::Graph &eqGraph, ptree::Graph &graph);
+    void fetchClassByBorderBFSInNoEq(ptree::Graph &eqGraph, ptree::Graph &graph);
+
     uint64_t getIndexSize() { return pt->getIndexSize(); }
     std::unordered_set<int> borderOut;
     std::unordered_set<int> borderIn;
@@ -210,6 +217,7 @@ class PTBlock : public Block {
 };
 
 class TopChainBlock : public Block {
+   public:
     void runReachability() override;
     bool query(int src, int dst) override;
     topchain::TopChainMeta topChainMeta;
@@ -222,6 +230,10 @@ class Partitioner {
 
     Partitioner(int maxs, int mins) : maxBlkSize(maxs), minBlkSize(mins) {}
     Partitioner(int numBlk) : minBlkSize(numBlk) {}
+    Partitioner(int numBlk,bool noEqClass) : minBlkSize(numBlk),noUseEqClass(noEqClass) {}
+
+    Partitioner(int numBlk, double alpha) : minBlkSize(numBlk), alpha(alpha) {}
+    Partitioner(double alpha) : alpha(alpha) {}
 
     ~Partitioner() = default;
 
@@ -235,11 +247,12 @@ class Partitioner {
     }
 
     uint64_t bitElemNumber;
+    bool noUseEqClass{false};
 
     // std::unordered_map<int, std::vector<int>> borderClassIn;
     // std::unordered_map<int, std::vector<int>> borderClassOut;
 
-    // 看下全局的sout是否可行
+
     std::unordered_map<size_t, int> GlobalRecordTableOut;
     std::unordered_map<size_t, int> GlobalRecordTableIn;
     std::unordered_map<size_t, int> SingleNode2EqGraphNode;
@@ -268,11 +281,16 @@ class Partitioner {
     int threshold{0};
     topchain::TopChainMeta topChainMeta_partitioner;
     topchain::GraphT gt_partitioner;
+    void setOriginNum(int num) { originNum = num; }
+    int GetPerfectPartitionNum(ptree::Graph &graph);
+    void setMinBlkSize(int size) { minBlkSize = size; }
+    int getMinBlkSize() const { return minBlkSize; }
 
    private:
     vector<int> que1;
     vector<int> que2;
-
+    double alpha;
+    int originNum{0};
     vector<int> visited_outter;
     int maxBlkSize{0};
     int minBlkSize{0};
@@ -281,9 +299,11 @@ class Partitioner {
     int getOutBorder(int src, ptree::Graph &graph);
     bool runBiBFS(int q1hi, int q2hi, int &sum, int idx);
     bool runBiBFSBy2Hop(int q1hi, int q2hi, int &sum, int idx);
-    bool runIndexQuery(int src, int dst);
+    bool runIndexQuery(int src, int dst, int mk = -1);
     bool runPTQuery(int src, int dst);
+    double GetComuputedBlockNum(ptree::Graph &graph, int num);
 };
+void queryTransform(BiGraph &bg, ptree::Graph &g, int u, int w, time_t start, time_t end, int &src, int &dst);
 
 // for oreach
 

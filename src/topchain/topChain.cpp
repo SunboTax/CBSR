@@ -16,9 +16,14 @@
 namespace topchain {
 using namespace std;
 
-bool cmp1(DEG d1, DEG d2) { return d1.d > d2.d; }
+bool cmp1(DEG d1, DEG d2)
+{
+    return d1.d > d2.d;
+}
 
-void queryTransform(BiGraph &bg, ptree::Graph &g, int u, int w, time_t start, time_t end, int &src, int &dst) {
+void queryTransform(BiGraph& bg, ptree::Graph& g, int u, int w, time_t start,
+    time_t end, int& src, int& dst)
+{
     int v1 = -1;
     int v2 = -1;
     // cout << __FILE__ << ":" << __LINE__ << "\n";
@@ -55,8 +60,8 @@ void queryTransform(BiGraph &bg, ptree::Graph &g, int u, int w, time_t start, ti
             }
             if (bg.timeTable_u[v1].empty() && k == -1) {
                 v1 = -1;
-                // cout << __FILE__ << ":" << __LINE__ << ":" << i << "---" << k <<
-                // endl;
+                // cout << __FILE__ << ":" << __LINE__ << ":" << i << "---" << k
+                // << endl;
             }
             break;
         }
@@ -84,10 +89,13 @@ void queryTransform(BiGraph &bg, ptree::Graph &g, int u, int w, time_t start, ti
                 pos2 = k;
                 k--;
             }
-            if (bg.timeTable_u[v2].empty() && k == -1) v2 = -1;
+            if (bg.timeTable_u[v2].empty() && k == -1)
+                v2 = -1;
             break;
 
-            if (i == bg.adj_matrix_u[w].size() - 1 && bg.timeSection_u[w][i].first >= end) break;
+            if (i == bg.adj_matrix_u[w].size() - 1
+                && bg.timeSection_u[w][i].first >= end)
+                break;
         }
     }
 
@@ -98,7 +106,8 @@ void queryTransform(BiGraph &bg, ptree::Graph &g, int u, int w, time_t start, ti
         return;
     }
 
-    // for (auto t : bg.timeTable_u[v1]) cout << "[" << t.first << " " << t.second
+    // for (auto t : bg.timeTable_u[v1]) cout << "[" << t.first << " " <<
+    // t.second
     // << "],"; cout << endl;
 
     int v1_idx = -1;
@@ -238,4 +247,4 @@ void queryTransform(BiGraph &bg, ptree::Graph &g, int u, int w, time_t start, ti
 //        << " MB" << endl;
 // }
 
-}  // namespace topchain
+} // namespace topchain

@@ -19,24 +19,29 @@
 using namespace std;
 
 class BiGraph {
-   public:
+public:
     vector<vector<int>> adj_matrix_u;
     vector<vector<int>> adj_matrix_l;
     vector<vector<pair<time_t, time_t>>> timeSection_u;
     vector<vector<pair<time_t, time_t>>> timeSection_l;
-    vector<vector<time_t>> timeTable;                  // 记录每个下部点的时间戳
-    vector<vector<pair<time_t, time_t>>> timeTable_u;  // 记录每个下部点真正用在dag中的时间戳
+    vector<vector<time_t>> timeTable; // 记录每个下部点的时间戳
+    vector<vector<pair<time_t, time_t>>>
+        timeTable_u; // 记录每个下部点真正用在dag中的时间戳
 
-    BiGraph(){};
-    BiGraph(int u, int l) {
+    BiGraph() {};
+    BiGraph(int u, int l)
+    {
         this->adj_matrix_u = vector<vector<int>>(u, vector<int>());
         this->adj_matrix_l = vector<vector<int>>(l, vector<int>());
-        this->timeSection_u = vector<vector<pair<time_t, time_t>>>(u, vector<pair<time_t, time_t>>());
-        this->timeSection_l = vector<vector<pair<time_t, time_t>>>(l, vector<pair<time_t, time_t>>());
+        this->timeSection_u = vector<vector<pair<time_t, time_t>>>(
+            u, vector<pair<time_t, time_t>>());
+        this->timeSection_l = vector<vector<pair<time_t, time_t>>>(
+            l, vector<pair<time_t, time_t>>());
         this->timeTable = vector<vector<time_t>>();
         this->timeTable_u = vector<vector<pair<time_t, time_t>>>();
     }
-    BiGraph(string filepath, string mode) {
+    BiGraph(string filepath, string mode)
+    {
         ifstream fin(filepath.c_str(), ios::in);
         vector<set<time_t>> timeSet;
         int num_upper, num_lower;
@@ -55,10 +60,14 @@ class BiGraph {
 
             this->adj_matrix_u = vector<vector<int>>(num_upper, vector<int>());
             this->adj_matrix_l = vector<vector<int>>(num_lower, vector<int>());
-            this->timeSection_u = vector<vector<pair<time_t, time_t>>>(num_upper, vector<pair<time_t, time_t>>());
-            this->timeSection_l = vector<vector<pair<time_t, time_t>>>(num_lower, vector<pair<time_t, time_t>>());
-            this->timeTable = vector<vector<time_t>>(num_lower, vector<time_t>());
-            this->timeTable_u = vector<vector<pair<time_t, time_t>>>(num_lower, vector<pair<time_t, time_t>>());
+            this->timeSection_u = vector<vector<pair<time_t, time_t>>>(
+                num_upper, vector<pair<time_t, time_t>>());
+            this->timeSection_l = vector<vector<pair<time_t, time_t>>>(
+                num_lower, vector<pair<time_t, time_t>>());
+            this->timeTable
+                = vector<vector<time_t>>(num_lower, vector<time_t>());
+            this->timeTable_u = vector<vector<pair<time_t, time_t>>>(
+                num_lower, vector<pair<time_t, time_t>>());
 
             int min_d = 1 * 600;
             int max_d = 8 * 3600;
@@ -85,8 +94,10 @@ class BiGraph {
 
                 this->adj_matrix_u[upper].push_back(lower);
                 this->adj_matrix_l[lower].push_back(upper);
-                this->timeSection_u[upper].push_back(pair<time_t, time_t>(start, end));
-                this->timeSection_l[lower].push_back(pair<time_t, time_t>(start, end));
+                this->timeSection_u[upper].push_back(
+                    pair<time_t, time_t>(start, end));
+                this->timeSection_l[lower].push_back(
+                    pair<time_t, time_t>(start, end));
                 timeSet[lower].insert(start);
                 timeSet[lower].insert(end);
             }
@@ -100,10 +111,14 @@ class BiGraph {
 
             this->adj_matrix_u = vector<vector<int>>(num_upper, vector<int>());
             this->adj_matrix_l = vector<vector<int>>(num_lower, vector<int>());
-            this->timeSection_u = vector<vector<pair<time_t, time_t>>>(num_upper, vector<pair<time_t, time_t>>());
-            this->timeSection_l = vector<vector<pair<time_t, time_t>>>(num_lower, vector<pair<time_t, time_t>>());
-            this->timeTable = vector<vector<time_t>>(num_lower, vector<time_t>());
-            this->timeTable_u = vector<vector<pair<time_t, time_t>>>(num_lower, vector<pair<time_t, time_t>>());
+            this->timeSection_u = vector<vector<pair<time_t, time_t>>>(
+                num_upper, vector<pair<time_t, time_t>>());
+            this->timeSection_l = vector<vector<pair<time_t, time_t>>>(
+                num_lower, vector<pair<time_t, time_t>>());
+            this->timeTable
+                = vector<vector<time_t>>(num_lower, vector<time_t>());
+            this->timeTable_u = vector<vector<pair<time_t, time_t>>>(
+                num_lower, vector<pair<time_t, time_t>>());
 
             int upper, lower;
             time_t start, end;
@@ -113,8 +128,10 @@ class BiGraph {
             while (fin >> upper >> lower >> start >> end) {
                 this->adj_matrix_u[upper].push_back(lower);
                 this->adj_matrix_l[lower].push_back(upper);
-                this->timeSection_u[upper].push_back(pair<time_t, time_t>(start, end));
-                this->timeSection_l[lower].push_back(pair<time_t, time_t>(start, end));
+                this->timeSection_u[upper].push_back(
+                    pair<time_t, time_t>(start, end));
+                this->timeSection_l[lower].push_back(
+                    pair<time_t, time_t>(start, end));
                 timeSet[lower].insert(start);
                 timeSet[lower].insert(end);
             }
@@ -126,20 +143,25 @@ class BiGraph {
             reverse(timeSection_u[i].begin(), timeSection_u[i].end());
         }
 
-        for (int i = 0; i < num_lower; i++) this->timeTable[i].assign(timeSet[i].begin(), timeSet[i].end());
+        for (int i = 0; i < num_lower; i++)
+            this->timeTable[i].assign(timeSet[i].begin(), timeSet[i].end());
 
         fin.close();
     }
 
-    BiGraph(const BiGraph &g) {
+    BiGraph(const BiGraph& g)
+    {
         this->adj_matrix_u = *(new vector<vector<int>>(g.adj_matrix_u));
         this->adj_matrix_l = *(new vector<vector<int>>(g.adj_matrix_l));
-        this->timeSection_u = *(new vector<vector<pair<time_t, time_t>>>(g.timeSection_u));
-        this->timeSection_l = *(new vector<vector<pair<time_t, time_t>>>(g.timeSection_l));
+        this->timeSection_u
+            = *(new vector<vector<pair<time_t, time_t>>>(g.timeSection_u));
+        this->timeSection_l
+            = *(new vector<vector<pair<time_t, time_t>>>(g.timeSection_l));
         this->timeTable = *(new vector<vector<time_t>>(g.timeTable));
-        this->timeTable_u = *(new vector<vector<pair<time_t, time_t>>>(g.timeTable_u));
+        this->timeTable_u
+            = *(new vector<vector<pair<time_t, time_t>>>(g.timeTable_u));
     }
-    ~BiGraph(){};
+    ~BiGraph() {};
 };
 
 // class Clique
@@ -198,9 +220,9 @@ class BiGraph {
 class Graph
 {
 public:
-    int n;                                                             // 点个数
-    vector<unordered_set<int>> adj_matrix;                             // 邻接表
-    vector<int> topoOrder;                                             //
+    int n;                                                             //
+点个数 vector<unordered_set<int>> adj_matrix;                             //
+邻接表 vector<int> topoOrder;                                             //
 拓扑排序 unordered_map<Clique, int, CliqueHash, CliqueEqual> cliqueToOrder; //
 从Clique映射为原编号 vector<Clique> orderToClique; vector<vector<int>> pathMap;
     vector<int> nodePath;
@@ -217,8 +239,8 @@ public:
         this->topoOrder = vector<int>(g.topoOrder);
         this->cliqueToOrder = unordered_map<Clique, int, CliqueHash,
 CliqueEqual>(g.cliqueToOrder); this->orderToClique =
-vector<Clique>(g.orderToClique); this->pathMap = vector<vector<int>>(g.pathMap);
-        this->nodePath = vector<int>(g.nodePath);
+vector<Clique>(g.orderToClique); this->pathMap =
+vector<vector<int>>(g.pathMap); this->nodePath = vector<int>(g.nodePath);
     };
 
     ~Graph(){};
@@ -447,4 +469,4 @@ g.adj_matrix[u]) if (parent[u] != parent[v])
 };
 */
 
-#endif  // GRAPH_H
+#endif // GRAPH_H

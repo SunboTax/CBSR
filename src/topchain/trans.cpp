@@ -11,7 +11,8 @@
 using namespace std;
 namespace topchain {
 
-Graph::Graph(ptree::Graph &g) {
+Graph::Graph(ptree::Graph& g)
+{
     V = g.num_vertices();
     dynamic_E = g.num_edges();
     static_E = dynamic_E;
@@ -36,7 +37,8 @@ Graph::Graph(ptree::Graph &g) {
     }
 }
 
-int GraphT::output(string s) {
+int GraphT::output(string s)
+{
     fstream out;
     string sdata = s + "_scc.txt";
     string sinfo = s + "_info.txt";
@@ -60,13 +62,15 @@ int GraphT::output(string s) {
     out << originalV << endl;
     for (int i = 0; i < originalV; ++i) {
         out << i << " " << arrivalT[i].size() << " ";
-        for (int j = 0; j < arrivalT[i].size(); ++j) out << arrivalT[i][j] << " ";
+        for (int j = 0; j < arrivalT[i].size(); ++j)
+            out << arrivalT[i][j] << " ";
         out << endl;
     }
 
     for (int i = 0; i < originalV; ++i) {
         out << i << " " << startT[i].size() << " ";
-        for (int j = 0; j < startT[i].size(); ++j) out << startT[i][j] << " ";
+        for (int j = 0; j < startT[i].size(); ++j)
+            out << startT[i][j] << " ";
         out << endl;
     }
 
@@ -74,17 +78,19 @@ int GraphT::output(string s) {
     return 0;
 }
 
-void GraphT::make_unique(vector<int> &data) {
+void GraphT::make_unique(vector<int>& data)
+{
     sort(data.begin(), data.end());
     data.erase(unique(data.begin(), data.end()), data.end());
 }
 
-int GraphT::getVertexID(int u, int offset, int startOrArrival) {
+int GraphT::getVertexID(int u, int offset, int startOrArrival)
+{
     //  0 arrival 1 start
 
     int base = u == 0 ? 0 : sumSize[u - 1];
-    const vector<int> &arrival = arrivalT[u];
-    const vector<int> &start = startT[u];
+    const vector<int>& arrival = arrivalT[u];
+    const vector<int>& start = startT[u];
 
     if (startOrArrival == 0) {
         return base + offset;
@@ -94,14 +100,16 @@ int GraphT::getVertexID(int u, int offset, int startOrArrival) {
     return 0;
 }
 
-void GraphT::add_edge(int u, int v) {
+void GraphT::add_edge(int u, int v)
+{
     E++;
     adj[u].push_back(v);
 }
 
-GraphT::GraphT(const Graph &g) {
-    startT = vector<vector<int> >(g.V, vector<int>());
-    arrivalT = vector<vector<int> >(g.V, vector<int>());
+GraphT::GraphT(const Graph& g)
+{
+    startT = vector<vector<int>>(g.V, vector<int>());
+    arrivalT = vector<vector<int>>(g.V, vector<int>());
     curSize = vector<int>(g.V, 0);
     sumSize = vector<int>(g.V, 0);
 
@@ -187,10 +195,12 @@ GraphT::GraphT(const Graph &g) {
         int last = -1;
         for (int j = int(arrivalT[i].size()) - 1; j >= 0; j--) {
             int u21 = getVertexID(i, j, 0);
-            vector<int>::iterator it = lower_bound(startT[i].begin(), startT[i].end(), arrivalT[i][j]);
+            vector<int>::iterator it = lower_bound(
+                startT[i].begin(), startT[i].end(), arrivalT[i][j]);
             if (it != startT[i].end()) {
                 int offset = it - startT[i].begin();
-                if (offset == last) continue;
+                if (offset == last)
+                    continue;
                 last = offset;
                 int u1 = getVertexID(i, offset, 1);
                 add_edge(u21, u1);
@@ -200,10 +210,15 @@ GraphT::GraphT(const Graph &g) {
         // add edge from temporal graph
         for (int j = 0; j < g.adj[i].size(); j++) {
             for (int k = 0; k < g.adj[i][j].interval.size(); k++) {
-                int u = i, v = g.adj[i][j].v, w = g.adj[i][j].w, t = g.adj[i][j].interval[k];
+                int u = i, v = g.adj[i][j].v, w = g.adj[i][j].w,
+                    t = g.adj[i][j].interval[k];
 
-                int offset_u = lower_bound(startT[u].begin(), startT[u].end(), t) - startT[u].begin();
-                int offset_v = lower_bound(arrivalT[v].begin(), arrivalT[v].end(), t + w) - arrivalT[v].begin();
+                int offset_u
+                    = lower_bound(startT[u].begin(), startT[u].end(), t)
+                    - startT[u].begin();
+                int offset_v = lower_bound(arrivalT[v].begin(),
+                                   arrivalT[v].end(), t + w)
+                    - arrivalT[v].begin();
                 int uT = getVertexID(u, offset_u, 1);
                 int vT = getVertexID(v, offset_v, 0);
 
@@ -213,7 +228,8 @@ GraphT::GraphT(const Graph &g) {
     }
 }
 
-void GraphT::initial_query() {
+void GraphT::initial_query()
+{
     t_start = 0;
     t_end = infinity;
 
@@ -224,11 +240,12 @@ void GraphT::initial_query() {
     }
 }
 
-void GraphT::initial_query(const char *filePath) {
+void GraphT::initial_query(const char* filePath)
+{
     t_start = 0;
     t_end = infinity;
 
-    FILE *file = fopen(filePath, "r");
+    FILE* file = fopen(filePath, "r");
     int s, x;
     for (int i = 0; i < 10; i++) {
         //	x=fscanf(file,"%d",&s);
@@ -238,7 +255,8 @@ void GraphT::initial_query(const char *filePath) {
     }
 }
 
-void GraphT::initial_ds() {
+void GraphT::initial_ds()
+{
     while (!myqueue.empty()) {
         myqueue.pop();
     }
@@ -253,7 +271,8 @@ void GraphT::initial_ds() {
     }
 }
 
-void GraphT::initial_ds_f() {
+void GraphT::initial_ds_f()
+{
     while (!myqueue.empty()) {
         myqueue.pop();
     }
@@ -269,7 +288,8 @@ void GraphT::initial_ds_f() {
     }
 }
 
-void GraphT::run_earliest_arrival() {
+void GraphT::run_earliest_arrival()
+{
     time_sum = 0;
 
     for (int i = 0; i < sources.size(); i++) {
@@ -280,7 +300,8 @@ void GraphT::run_earliest_arrival() {
     print_avg_time();
 }
 
-int GraphT::getFrom(int from, int t1, int t2) {
+int GraphT::getFrom(int from, int t1, int t2)
+{
     int tmp;
     for (int j = 0; j < startT[from].size(); ++j) {
         tmp = getVertexID(from, j, 1);
@@ -291,7 +312,8 @@ int GraphT::getFrom(int from, int t1, int t2) {
     }
     return -1;
 }
-int GraphT::getTo(int to, int t1, int t2) {
+int GraphT::getTo(int to, int t1, int t2)
+{
     int tmp;
     for (int j = arrivalT[to].size() - 1; j >= 0; --j) {
         tmp = getVertexID(to, j, 0);
@@ -303,21 +325,24 @@ int GraphT::getTo(int to, int t1, int t2) {
     }
     return -1;
 }
-bool GraphT::reachability(int from, int to, int t1, int t2) {
+bool GraphT::reachability(int from, int to, int t1, int t2)
+{
     initial_ds();
 
     int u = getFrom(from, t1, t2);
     int v = getTo(to, t1, t2);
     // cout << "u: " << u << " v: " << v << endl;
     // cout << timeId[u] << " " << timeId[v] << endl;
-    if (u == -1 || v == -1) return 0;
+    if (u == -1 || v == -1)
+        return 0;
     queue<int> q;
     q.push(u);
     visited[u] = 1;
     while (!q.empty()) {
         int tmp = q.front();
         q.pop();
-        if (tmp == v) return 1;
+        if (tmp == v)
+            return 1;
         // cout << tmp << ": \n";
         for (int i = 0; i < adj[tmp].size(); ++i) {
             int next = adj[tmp][i];
@@ -331,14 +356,16 @@ bool GraphT::reachability(int from, int to, int t1, int t2) {
     return 0;
 }
 
-void GraphT::earliest_arrival(int source) {
+void GraphT::earliest_arrival(int source)
+{
     a_time[source] = t_start;
 
     int u, v, uid;
     for (int j = 0; j < startT[source].size(); j++) {
         u = getVertexID(source, j, 1);
 
-        if (timeId[u] >= t_start && timeId[u] <= t_end) myqueue.push(u);
+        if (timeId[u] >= t_start && timeId[u] <= t_end)
+            myqueue.push(u);
     }
 
     while (!myqueue.empty()) {
@@ -364,10 +391,11 @@ void GraphT::earliest_arrival(int source) {
     }
 }
 
-void GraphT::run_earliest_arrival(const char *filePath) {
+void GraphT::run_earliest_arrival(const char* filePath)
+{
     time_sum = 0;
 
-    FILE *file = fopen(filePath, "w");
+    FILE* file = fopen(filePath, "w");
 
     for (int i = 0; i < sources.size(); i++) {
         initial_ds();
@@ -379,14 +407,16 @@ void GraphT::run_earliest_arrival(const char *filePath) {
     print_avg_time();
 }
 
-void GraphT::earliest_arrival(int source, FILE *file) {
+void GraphT::earliest_arrival(int source, FILE* file)
+{
     a_time[source] = t_start;
 
     int u, v, uid;
     for (int j = 0; j < startT[source].size(); j++) {
         u = getVertexID(source, j, 1);
 
-        if (timeId[u] >= t_start && timeId[u] <= t_end) myqueue.push(u);
+        if (timeId[u] >= t_start && timeId[u] <= t_end)
+            myqueue.push(u);
     }
 
     while (!myqueue.empty()) {
@@ -414,7 +444,8 @@ void GraphT::earliest_arrival(int source, FILE *file) {
     print_result(source, a_time, file);
 }
 
-void GraphT::run_fastest() {
+void GraphT::run_fastest()
+{
     time_sum = 0;
 
     for (int i = 0; i < sources.size(); i++) {
@@ -425,7 +456,8 @@ void GraphT::run_fastest() {
     print_avg_time();
 }
 
-void GraphT::fastest(int source) {
+void GraphT::fastest(int source)
+{
     f_time[source] = 0;
     a_time[source] = t_start;
 
@@ -447,7 +479,8 @@ void GraphT::fastest(int source) {
                 if (timeId[u] < a_time[uid]) {
                     a_time[uid] = timeId[u];
 
-                    if (f_time[uid] > a_time[uid] - c_t) f_time[uid] = a_time[uid] - c_t;
+                    if (f_time[uid] > a_time[uid] - c_t)
+                        f_time[uid] = a_time[uid] - c_t;
                 }
 
                 for (int i = 0; i < adj[u].size(); i++) {
@@ -464,10 +497,11 @@ void GraphT::fastest(int source) {
     }
 }
 
-void GraphT::run_fastest(const char *filePath) {
+void GraphT::run_fastest(const char* filePath)
+{
     time_sum = 0;
 
-    FILE *file = fopen(filePath, "w");
+    FILE* file = fopen(filePath, "w");
 
     for (int i = 0; i < sources.size(); i++) {
         initial_ds_f();
@@ -479,7 +513,8 @@ void GraphT::run_fastest(const char *filePath) {
     print_avg_time();
 }
 
-void GraphT::fastest(int source, FILE *file) {
+void GraphT::fastest(int source, FILE* file)
+{
     f_time[source] = 0;
     a_time[source] = t_start;
 
@@ -501,7 +536,8 @@ void GraphT::fastest(int source, FILE *file) {
                 if (timeId[u] < a_time[uid]) {
                     a_time[uid] = timeId[u];
 
-                    if (f_time[uid] > a_time[uid] - c_t) f_time[uid] = a_time[uid] - c_t;
+                    if (f_time[uid] > a_time[uid] - c_t)
+                        f_time[uid] = a_time[uid] - c_t;
                 }
 
                 for (int i = 0; i < adj[u].size(); i++) {
@@ -520,35 +556,44 @@ void GraphT::fastest(int source, FILE *file) {
     print_result(source, f_time, file);
 }
 
-void GraphT::print_result(const int source, const vector<int> &t_time, FILE *file) {
+void GraphT::print_result(const int source, const vector<int>& t_time, FILE* file)
+{
     for (int i = 0; i < gv; i++) {
         if (t_time[i] != infinity) {
-            fprintf(file, "%d %d %d %d %d\n", source, i, t_start, t_end, t_time[i]);
+            fprintf(file, "%d %d %d %d %d\n", source, i, t_start, t_end,
+                t_time[i]);
         }
     }
 }
 
-void GraphT::print_avg_time() { cout << "Average time: " << time_sum / 100 << endl; }
+void GraphT::print_avg_time()
+{
+    cout << "Average time: " << time_sum / 100 << endl;
+}
 
-void GraphT::print_avg_time(const char *filePath1, const char *filePath2) {
-    FILE *file = fopen(filePath2, "a");
+void GraphT::print_avg_time(const char* filePath1, const char* filePath2)
+{
+    FILE* file = fopen(filePath2, "a");
 
     fprintf(file, "%s\t%f\n", filePath1, time_sum / 10);
     ;
     fclose(file);
 }
 
-void GraphT::show_statistics(const char *filePath1, const char *filePath2) {
-    FILE *file = fopen(filePath2, "a");
+void GraphT::show_statistics(const char* filePath1, const char* filePath2)
+{
+    FILE* file = fopen(filePath2, "a");
 
     fprintf(file, "%s\t%d\t%d\n", filePath1, V, E);
     fclose(file);
 }
 
-GraphT transToScc(ptree::Graph &g1) {
+GraphT
+transToScc(ptree::Graph& g1)
+{
     Graph g(g1);
     GraphT gT(g);
     return gT;
 }
 
-}  // namespace topchain
+} // namespace topchain

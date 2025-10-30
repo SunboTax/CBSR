@@ -38,17 +38,22 @@ add_subdirectory(tool)
 file(GLOB_RECURSE ALL_SOURCE_FILES 
      ${CMAKE_SOURCE_DIR}/*.c 
      ${CMAKE_SOURCE_DIR}/*.cpp 
+      ${CMAKE_SOURCE_DIR}/*.cc
      ${CMAKE_SOURCE_DIR}/*.h)
 
 # 排除 third 目录
 list(FILTER ALL_SOURCE_FILES EXCLUDE REGEX "${CMAKE_SOURCE_DIR}/third/.*")
 
-# 自定义命令以运行 clang-format
-add_custom_command(OUTPUT clang_format
-                   COMMAND clang-format
-                   ARGS -i -style=file ${ALL_SOURCE_FILES}
-                   COMMENT "Running clang-format on all source files except those under 'third/' directory"
-                   VERBATIM)
-
-# 创建伪目标
-add_custom_target(format DEPENDS clang_format)
+if(CLANG_FORMAT)
+    file(GLOB_RECURSE ALL_SOURCE_FILES
+        "*.cpp" "*.h" "*.cc" 
+    )
+    list(FILTER ALL_SOURCE_FILES EXCLUDE REGEX ".*third.*")
+    
+    # 将命令和参数作为列表传递
+    add_custom_target(clang-format
+        COMMAND "${CLANG_FORMAT}" "-i" "-style=LLVM" ${ALL_SOURCE_FILES}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Running clang-format on all source files"
+    )
+endif()

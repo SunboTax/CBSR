@@ -1,13 +1,16 @@
 #include "pathtree/PathTree.h"
 namespace ptree {
-PathTree::PathTree(Graph &graph) : g(graph) {
+PathTree::PathTree(Graph& graph)
+    : g(graph)
+{
     int maxid = g.num_vertices();
-    labels = new int *[maxid];
-    for (int i = 0; i < maxid; i++) labels[i] = new int[3];
+    labels = new int*[maxid];
+    for (int i = 0; i < maxid; i++)
+        labels[i] = new int[3];
     ng = Graph(maxid);
     nextVertex = vector<int>(maxid);
     //	out_uncover = vector<set<int> >(maxid);
-    out_uncover = vector<vector<int> >(maxid);
+    out_uncover = vector<vector<int>>(maxid);
     for (int i = 0; i < maxid; i++) {
         ng.addVertex(i);
         nextVertex[i] = -1;
@@ -16,15 +19,18 @@ PathTree::PathTree(Graph &graph) : g(graph) {
     }
 }
 
-PathTree::PathTree(Graph &graph, vector<int> ts) : g(graph) {
+PathTree::PathTree(Graph& graph, vector<int> ts)
+    : g(graph)
+{
     grts = ts;
     int maxid = g.num_vertices();
-    labels = new int *[maxid];
-    for (int i = 0; i < maxid; i++) labels[i] = new int[3];
+    labels = new int*[maxid];
+    for (int i = 0; i < maxid; i++)
+        labels[i] = new int[3];
     ng = Graph(maxid);
     nextVertex = vector<int>(maxid);
     //	out_uncover = vector<set<int> >(maxid);
-    out_uncover = vector<vector<int> >(maxid);
+    out_uncover = vector<vector<int>>(maxid);
     for (int i = 0; i < maxid; i++) {
         ng.addVertex(i);
         nextVertex[i] = -1;
@@ -33,12 +39,15 @@ PathTree::PathTree(Graph &graph, vector<int> ts) : g(graph) {
     }
 }
 
-PathTree::~PathTree() {
-    for (int i = 0; i < g.num_vertices(); i++) delete[] labels[i];
+PathTree::~PathTree()
+{
+    for (int i = 0; i < g.num_vertices(); i++)
+        delete[] labels[i];
     delete[] labels;
 }
 
-void PathTree::compute_tcm() {
+void PathTree::compute_tcm()
+{
     double tcsize = 0;
     Graph tc(g.num_vertices());
     GraphUtil::transitive_closure(g, tc);
@@ -47,7 +56,8 @@ void PathTree::compute_tcm() {
     for (int i = 0; i < tc.num_vertices(); i++) {
         el = tc.out_edges(i);
         tcsize += el.size();
-        for (eit = el.begin(); eit != el.end(); eit++) tcm[make_pair(i, *eit)] = true;
+        for (eit = el.begin(); eit != el.end(); eit++)
+            tcm[make_pair(i, *eit)] = true;
     }
     cout << "#TC size=" << tcsize << endl;
     cout << "#Ratio=" << tcsize / (g.num_vertices() * 1.0) << endl;
@@ -58,11 +68,12 @@ void PathTree::compute_tcm() {
     */
 }
 
-void PathTree::index_size(int *ind_size) {
+void PathTree::index_size(int* ind_size)
+{
     int isize = 0;
     int uncover_size = 0;
     //	displayLabels();
-    vector<vector<int> >::iterator vit;
+    vector<vector<int>>::iterator vit;
     for (vit = out_uncover.begin(); vit != out_uncover.end(); vit++) {
         uncover_size += vit->size();
     }
@@ -72,15 +83,16 @@ void PathTree::index_size(int *ind_size) {
     isize += pathMap.size() * 2;
 
     int uncover_size_tab = uncover_size;
-    map<int, vector<int> >::iterator mit;
-    for (mit = comp_table.begin(); mit != comp_table.end(); mit++) uncover_size_tab += mit->second.size();
+    map<int, vector<int>>::iterator mit;
+    for (mit = comp_table.begin(); mit != comp_table.end(); mit++)
+        uncover_size_tab += mit->second.size();
     /*
             cout << "uncover set rate: " << uncover_size*1.00/(isize*1.00) <<
        endl; cout << "path tree cover set size percentage: " <<
        pathMap.size()*2.00/(isize*1.00) << endl;
     */
-    ind_size[0] = isize;             // total size
-    ind_size[1] = uncover_size_tab;  // transitive closure size
+    ind_size[0] = isize; // total size
+    ind_size[1] = uncover_size_tab; // transitive closure size
     ind_size[2] = uncover_size;
     /*
             int psize = 0;
@@ -90,12 +102,14 @@ void PathTree::index_size(int *ind_size) {
     */
 }
 
-void PathTree::transform(DWGraph branch, Graph &graph) {
+void PathTree::transform(DWGraph branch, Graph& graph)
+{
     DWVertexList dwvl = branch.vertices();
     DWVertexList::iterator dwvit;
     DWEdgeList dwel;
     DWEdgeList::iterator dweit;
-    for (int i = 0; i < branch.num_vertices(); i++) graph.addVertex(i);
+    for (int i = 0; i < branch.num_vertices(); i++)
+        graph.addVertex(i);
     for (dwvit = dwvl.begin(); dwvit != dwvl.end(); dwvit++) {
         dwel = branch.out_edges(dwvit->first);
         for (dweit = dwel.begin(); dweit != dwel.end(); dweit++) {
@@ -108,21 +122,23 @@ void PathTree::transform(DWGraph branch, Graph &graph) {
     */
 }
 
-void PathTree::buildWeightPathGraph_Pred() {
+void PathTree::buildWeightPathGraph_Pred()
+{
     int gs = g.num_vertices();
     // perform path decomposition
     //	GraphUtil::pathDecomposition(g, pathMap);
     Graph tree(gs);
-    for (int i = 0; i < gs; i++) tree.addVertex(i);
+    for (int i = 0; i < gs; i++)
+        tree.addVertex(i);
     cout << "complete tree init" << endl;
 
     gettimeofday(&before_time, NULL);
-    vector<set<int> > predMap(g.num_vertices(), set<int>());
+    vector<set<int>> predMap(g.num_vertices(), set<int>());
     cout << "start find tree cover" << endl;
     GraphUtil::findTreeCover(g, tree, predMap, grts);
     gettimeofday(&after_time, NULL);
-    run_time =
-        (after_time.tv_sec - before_time.tv_sec) * 1000.0 + (after_time.tv_usec - before_time.tv_usec) * 1.0 / 1000.0;
+    run_time = (after_time.tv_sec - before_time.tv_sec) * 1000.0
+        + (after_time.tv_usec - before_time.tv_usec) * 1.0 / 1000.0;
     cout << "find tree cover time:" << run_time << " (ms)" << endl;
 
     gettimeofday(&before_time, NULL);
@@ -130,15 +146,15 @@ void PathTree::buildWeightPathGraph_Pred() {
     GraphUtil::treePathDecomposition(tree, g, pathMap);
 
     gettimeofday(&after_time, NULL);
-    run_time =
-        (after_time.tv_sec - before_time.tv_sec) * 1000.0 + (after_time.tv_usec - before_time.tv_usec) * 1.0 / 1000.0;
+    run_time = (after_time.tv_sec - before_time.tv_sec) * 1000.0
+        + (after_time.tv_usec - before_time.tv_usec) * 1.0 / 1000.0;
     cout << "path decomposition time:" << run_time << " (ms)" << endl;
 
     // build weight path graph
     unordered_map<int, int> fastMap;
     unordered_map<int, int> weightMap;
     unordered_map<int, int>::iterator hmit;
-    vector<vector<int> >::iterator mit;
+    vector<vector<int>>::iterator mit;
     vector<int> path;
     vector<int>::iterator lit;
     EdgeList el;
@@ -148,12 +164,13 @@ void PathTree::buildWeightPathGraph_Pred() {
 
     // construct equivalent topology
     Graph equgraph;
-    map<int, set<int> > pathtopo;
+    map<int, set<int>> pathtopo;
     for (int i = 0; i < gs; i++) {
         equgraph.addVertex(i);
         el = g.out_edges(i);
         for (eit = el.begin(); eit != el.end(); eit++) {
-            if (g[*eit].path_id != g[i].path_id) pathtopo[g[i].path_id].insert(g[*eit].path_id);
+            if (g[*eit].path_id != g[i].path_id)
+                pathtopo[g[i].path_id].insert(g[*eit].path_id);
         }
     }
     buildEquEdgeset(pathtopo, equgraph);
@@ -169,15 +186,18 @@ void PathTree::buildWeightPathGraph_Pred() {
             el = equgraph.in_edges(*lit);
             if (i == 0) {
                 for (eit = el.begin(); eit != el.end(); eit++) {
-                    if (g[*eit].path_id == k) continue;
+                    if (g[*eit].path_id == k)
+                        continue;
                     index = g[*eit].path_id * gsize + k;
                     weightMap[index] += predMap[*eit].size();
                     hmit = fastMap.find(index);
                     if (hmit != fastMap.end()) {
-                        pg.addEdge(g[*eit].path_id, k, weightMap[index], hmit->second);
+                        pg.addEdge(g[*eit].path_id, k, weightMap[index],
+                            hmit->second);
                     } else {
                         fastMap[index] = edgeid;
-                        pg.addEdge(g[*eit].path_id, k, weightMap[index], edgeid);
+                        pg.addEdge(g[*eit].path_id, k, weightMap[index],
+                            edgeid);
                         edgeid++;
                     }
                 }
@@ -187,18 +207,23 @@ void PathTree::buildWeightPathGraph_Pred() {
                     index = g[*eit].path_id * gsize + k;
                     if (g[*eit].path_id != k) {
                         vec.clear();
-                        set_difference(predMap[*eit].begin(), predMap[*eit].end(), predMap[pre].begin(),
-                                       predMap[pre].end(), back_inserter(vec));
+                        set_difference(
+                            predMap[*eit].begin(), predMap[*eit].end(),
+                            predMap[pre].begin(), predMap[pre].end(),
+                            back_inserter(vec));
                         addval = vec.size();
-                        if (addval == 0) addval = 1;
+                        if (addval == 0)
+                            addval = 1;
                         weightMap[index] += addval;
                         hmit = fastMap.find(index);
 
                         if (hmit != fastMap.end()) {
-                            pg.addEdge(g[*eit].path_id, k, weightMap[index], hmit->second);
+                            pg.addEdge(g[*eit].path_id, k, weightMap[index],
+                                hmit->second);
                         } else {
                             fastMap[index] = edgeid;
-                            pg.addEdge(g[*eit].path_id, k, weightMap[index], edgeid);
+                            pg.addEdge(g[*eit].path_id, k, weightMap[index],
+                                edgeid);
                             edgeid++;
                         }
                     }
@@ -211,14 +236,16 @@ void PathTree::buildWeightPathGraph_Pred() {
 }
 
 // build weighted path graph
-void PathTree::buildWeightPathGraph(int type) {
+void PathTree::buildWeightPathGraph(int type)
+{
     // perform path decomposition
-    if (type == 4) GraphUtil::pathDecomposition(g, pathMap, grts);
+    if (type == 4)
+        GraphUtil::pathDecomposition(g, pathMap, grts);
 
     // build weight path graph
     unordered_map<int, int> fastMap;
     unordered_map<int, int>::iterator hmit;
-    vector<vector<int> >::iterator mit;
+    vector<vector<int>>::iterator mit;
     vector<int> path;
     vector<int>::iterator lit;
     EdgeList el;
@@ -236,7 +263,8 @@ void PathTree::buildWeightPathGraph(int type) {
             for (eit = el.begin(); eit != el.end(); eit++) {
                 if (g[*eit].path_id != k) {
                     hmit = fastMap.find(k * gsize + g[*eit].path_id);
-                    if (hmit != fastMap.end()) pg.addEdge(k, g[*eit].path_id, depth, hmit->second);
+                    if (hmit != fastMap.end())
+                        pg.addEdge(k, g[*eit].path_id, depth, hmit->second);
                     //	pg.addEdge(mit->first,
                     // g[*eit].path_id, depth,
                     // hmit->second);
@@ -260,9 +288,10 @@ void PathTree::buildWeightPathGraph(int type) {
     maxeid = edgeid;
 }
 
-void PathTree::buildEquEdgeset(map<int, set<int> > &pathtopo, Graph &equgraph) {
+void PathTree::buildEquEdgeset(map<int, set<int>>& pathtopo, Graph& equgraph)
+{
     // add all vertices from original graph
-    vector<vector<int> >::iterator mit;
+    vector<vector<int>>::iterator mit;
     vector<int> path;
     vector<int>::iterator lit;
 
@@ -272,7 +301,7 @@ void PathTree::buildEquEdgeset(map<int, set<int> > &pathtopo, Graph &equgraph) {
     int max_id;
     int max_topo_id = MIN_VAL;
     int depth;
-    map<int, set<int> >::iterator miter;
+    map<int, set<int>>::iterator miter;
     set<int>::iterator siter;
     set<int> si;
     for (miter = pathtopo.begin(); miter != pathtopo.end(); miter++) {
@@ -286,12 +315,14 @@ void PathTree::buildEquEdgeset(map<int, set<int> > &pathtopo, Graph &equgraph) {
                 max_topo_id = MIN_VAL;
                 el1 = g.in_edges(*lit);
                 for (eit1 = el1.begin(); eit1 != el1.end(); eit1++) {
-                    if (g[*eit1].path_id == miter->first && g[*eit1].topo_id > max_topo_id) {
+                    if (g[*eit1].path_id == miter->first
+                        && g[*eit1].topo_id > max_topo_id) {
                         max_id = *eit1;
                         max_topo_id = g[*eit1].topo_id;
                     }
                 }
-                if (max_id == -1 || max_topo_id <= source_path_maxtopo) continue;
+                if (max_id == -1 || max_topo_id <= source_path_maxtopo)
+                    continue;
                 source_path_maxtopo = max_topo_id;
                 equgraph.addEdge(max_id, *lit);
             }
@@ -300,19 +331,22 @@ void PathTree::buildEquEdgeset(map<int, set<int> > &pathtopo, Graph &equgraph) {
 }
 
 // calculate minimal equivalent edgeset
-void PathTree::buildEquGraph() {
+void PathTree::buildEquGraph()
+{
     // add all vertices from original graph
-    vector<vector<int> >::iterator mit;
+    vector<vector<int>>::iterator mit;
     vector<int> path;
     vector<int>::iterator lit;
     int p, q;
     for (mit = pathMap.begin(); mit != pathMap.end(); mit++) {
         path = (*mit);
-        if (path.size() == 1) continue;
+        if (path.size() == 1)
+            continue;
         for (lit = path.begin(); lit != path.end();) {
             p = *lit;
             lit++;
-            if (lit == path.end()) break;
+            if (lit == path.end())
+                break;
             q = *lit;
             nextVertex[p] = q;
             ng.addEdge(p, q);
@@ -342,7 +376,8 @@ void PathTree::buildEquGraph() {
                         max_topo_id = g[*eit1].topo_id;
                     }
                 }
-                if (max_id == -1 || max_topo_id <= source_path_maxtopo) continue;
+                if (max_id == -1 || max_topo_id <= source_path_maxtopo)
+                    continue;
                 source_path_maxtopo = max_topo_id;
                 ng.addEdge(max_id, *lit);
             }
@@ -350,29 +385,34 @@ void PathTree::buildEquGraph() {
     }
 }
 
-void PathTree::pathDFS(int vid, int &order, int &first_order, vector<bool> &visited) {
+void PathTree::pathDFS(int vid, int& order, int& first_order,
+    vector<bool>& visited)
+{
     visited[vid] = true;
     g[vid].first_visit = first_order;
     first_order++;
     if (nextVertex[vid] != -1) {
-        if (!visited[nextVertex[vid]]) pathDFS(nextVertex[vid], order, first_order, visited);
+        if (!visited[nextVertex[vid]])
+            pathDFS(nextVertex[vid], order, first_order, visited);
     }
 
     EdgeList el = ng.out_edges(vid);
     EdgeList::iterator eit;
     for (eit = el.begin(); eit != el.end(); eit++) {
-        if (!visited[*eit]) pathDFS(*eit, order, first_order, visited);
+        if (!visited[*eit])
+            pathDFS(*eit, order, first_order, visited);
     }
     g[vid].dfs_order = order;
     order--;
 }
 
-void PathTree::readPathMap(ifstream &cfile) {
+void PathTree::readPathMap(ifstream& cfile)
+{
     int n;
     string buf;
     getline(cfile, buf);
     istringstream(buf) >> n;
-    pathMap = vector<vector<int> >(n, vector<int>());
+    pathMap = vector<vector<int>>(n, vector<int>());
     string sub;
     int id;
     for (int i = 0; i < n; i++) {
@@ -399,7 +439,8 @@ void PathTree::readPathMap(ifstream &cfile) {
 }
 
 // type specify PTree-1 or PTree-2
-void PathTree::createLabels(int type, ifstream &cfile, bool compress) {
+void PathTree::createLabels(int type, ifstream& cfile, bool compress)
+{
     struct timeval after_time1, before_time1;
     // build weighted path graph
     cout << "building weighted path graph" << endl;
@@ -413,8 +454,8 @@ void PathTree::createLabels(int type, ifstream &cfile, bool compress) {
         buildWeightPathGraph(type);
     }
     gettimeofday(&after_time1, NULL);
-    run_time = (after_time1.tv_sec - before_time1.tv_sec) * 1000.0 +
-               (after_time1.tv_usec - before_time1.tv_usec) * 1.0 / 1000.0;
+    run_time = (after_time1.tv_sec - before_time1.tv_sec) * 1000.0
+        + (after_time1.tv_usec - before_time1.tv_usec) * 1.0 / 1000.0;
     cout << "building weighted path graph time:" << run_time << " (ms)" << endl;
 
     /*
@@ -461,8 +502,8 @@ void PathTree::createLabels(int type, ifstream &cfile, bool compress) {
     }
 
     gettimeofday(&after_time, NULL);
-    run_time =
-        (after_time.tv_sec - before_time.tv_sec) * 1000.0 + (after_time.tv_usec - before_time.tv_usec) * 1.0 / 1000.0;
+    run_time = (after_time.tv_sec - before_time.tv_sec) * 1000.0
+        + (after_time.tv_usec - before_time.tv_usec) * 1.0 / 1000.0;
     cout << "finding max branching time:" << run_time << " (ms)" << endl;
 
     /*
@@ -485,8 +526,8 @@ void PathTree::createLabels(int type, ifstream &cfile, bool compress) {
     transform(branch, newbranch);
 
     gettimeofday(&after_time, NULL);
-    run_time =
-        (after_time.tv_sec - before_time.tv_sec) * 1000.0 + (after_time.tv_usec - before_time.tv_usec) * 1.0 / 1000.0;
+    run_time = (after_time.tv_sec - before_time.tv_sec) * 1000.0
+        + (after_time.tv_usec - before_time.tv_usec) * 1.0 / 1000.0;
     cout << "weighted graph transformation time:" << run_time << " (ms)" << endl;
     /*
             cout << "++++++++++++++++++++++++++++++++++++++++++++" << endl;
@@ -497,8 +538,8 @@ void PathTree::createLabels(int type, ifstream &cfile, bool compress) {
     gettimeofday(&before_time, NULL);
     buildEquGraph();
     gettimeofday(&after_time, NULL);
-    run_time =
-        (after_time.tv_sec - before_time.tv_sec) * 1000.0 + (after_time.tv_usec - before_time.tv_usec) * 1.0 / 1000.0;
+    run_time = (after_time.tv_sec - before_time.tv_sec) * 1000.0
+        + (after_time.tv_usec - before_time.tv_usec) * 1.0 / 1000.0;
     cout << "building equivalent graph time:" << run_time << " (ms)" << endl;
     /*
             cout << "equivalent graph" << endl;
@@ -510,8 +551,8 @@ void PathTree::createLabels(int type, ifstream &cfile, bool compress) {
     GraphUtil::pre_post_labeling(newbranch);
 
     gettimeofday(&after_time, NULL);
-    run_time =
-        (after_time.tv_sec - before_time.tv_sec) * 1000.0 + (after_time.tv_usec - before_time.tv_usec) * 1.0 / 1000.0;
+    run_time = (after_time.tv_sec - before_time.tv_sec) * 1000.0
+        + (after_time.tv_usec - before_time.tv_usec) * 1.0 / 1000.0;
     cout << "labeling branching time:" << run_time << " (ms)" << endl;
     /*
             // for test
@@ -531,18 +572,21 @@ void PathTree::createLabels(int type, ifstream &cfile, bool compress) {
     int order = g.num_vertices();
     int first_order = 1;
     vector<bool> visited(order, false);
-    for (rit = reverse_topo_sort.rbegin(); rit != reverse_topo_sort.rend(); rit++) {
+    for (rit = reverse_topo_sort.rbegin(); rit != reverse_topo_sort.rend();
+         rit++) {
         path = pathMap[*rit];
         lit = path.begin();
         for (lit = path.begin(); lit != path.end(); lit++) {
-            if (!visited[*lit]) pathDFS(*lit, order, first_order, visited);
+            if (!visited[*lit])
+                pathDFS(*lit, order, first_order, visited);
         }
     }
 
     gettimeofday(&after_time, NULL);
-    run_time =
-        (after_time.tv_sec - before_time.tv_sec) * 1000.0 + (after_time.tv_usec - before_time.tv_usec) * 1.0 / 1000.0;
-    cout << "labeling equivalent graph by DFS time:" << run_time << " (ms)" << endl;
+    run_time = (after_time.tv_sec - before_time.tv_sec) * 1000.0
+        + (after_time.tv_usec - before_time.tv_usec) * 1.0 / 1000.0;
+    cout << "labeling equivalent graph by DFS time:" << run_time << " (ms)"
+         << endl;
 
     // update label vector
     int gsize = g.num_vertices();
@@ -569,7 +613,9 @@ void PathTree::createLabels(int type, ifstream &cfile, bool compress) {
         for (eit = el.begin(); eit != el.end(); eit++) {
             //	insertSet(out_uncover[*vit], out_uncover[*eit]);
             mergeVector(out_uncover[*vit], out_uncover[*eit]);
-            if (labels[*vit][2] <= labels[*eit][2] && labels[*eit][0] >= pre1 && labels[*eit][1] <= post1) continue;
+            if (labels[*vit][2] <= labels[*eit][2] && labels[*eit][0] >= pre1
+                && labels[*eit][1] <= post1)
+                continue;
             vector<int> temp;
             temp.push_back(*eit);
             mergeVector(out_uncover[*vit], temp);
@@ -580,7 +626,8 @@ void PathTree::createLabels(int type, ifstream &cfile, bool compress) {
             */
         }
         // Nov 9 10 2010 for tods correction
-        vector<int>::iterator tmp_iter = find(out_uncover[*vit].begin(), out_uncover[*vit].end(), *vit);
+        vector<int>::iterator tmp_iter
+            = find(out_uncover[*vit].begin(), out_uncover[*vit].end(), *vit);
         if (tmp_iter != out_uncover[*vit].end()) {
             out_uncover[*vit].erase(tmp_iter);
         }
@@ -589,8 +636,8 @@ void PathTree::createLabels(int type, ifstream &cfile, bool compress) {
     //	displayLabels();
 
     gettimeofday(&after_time, NULL);
-    run_time =
-        (after_time.tv_sec - before_time.tv_sec) * 1000.0 + (after_time.tv_usec - before_time.tv_usec) * 1.0 / 1000.0;
+    run_time = (after_time.tv_sec - before_time.tv_sec) * 1000.0
+        + (after_time.tv_usec - before_time.tv_usec) * 1.0 / 1000.0;
     cout << "computing uncover set time:" << run_time << " (ms)" << endl;
 
     if (compress) {
@@ -599,7 +646,9 @@ void PathTree::createLabels(int type, ifstream &cfile, bool compress) {
 
         double size_ratio = 0.9;
         cout << "init cl=" << g.num_vertices() * size_ratio << endl;
-        int num_cluster = (int)(g.num_vertices() * size_ratio > 10 ? g.num_vertices() * size_ratio : 10);
+        int num_cluster = (int)(g.num_vertices() * size_ratio > 10
+                ? g.num_vertices() * size_ratio
+                : 10);
         DataComp dc(out_uncover, grts, num_cluster, g.num_vertices());
         dc.comp_kmeans();
         effective = dc.checkSize();
@@ -613,15 +662,17 @@ void PathTree::createLabels(int type, ifstream &cfile, bool compress) {
         */
 
         gettimeofday(&after_time, NULL);
-        run_time = (after_time.tv_sec - before_time.tv_sec) * 1000.0 +
-                   (after_time.tv_usec - before_time.tv_usec) * 1.0 / 1000.0;
+        run_time = (after_time.tv_sec - before_time.tv_sec) * 1000.0
+            + (after_time.tv_usec - before_time.tv_usec) * 1.0 / 1000.0;
         cout << "data compression time:" << run_time << " (ms)" << endl;
     }
 }
 
 // vector v2 inserts into vector v1
-void PathTree::mergeVector(vector<int> &v1, vector<int> &v2) {
-    if (v2.empty()) return;
+void PathTree::mergeVector(vector<int>& v1, vector<int>& v2)
+{
+    if (v2.empty())
+        return;
     vector<int> visitstack;
     vector<int> vb;
     vector<int>::iterator vit1 = v1.begin(), vit2 = v2.begin();
@@ -651,10 +702,12 @@ void PathTree::mergeVector(vector<int> &v1, vector<int> &v2) {
         }
     }
     if (vit1 != v1.end()) {
-        for (; vit1 != v1.end(); vit1++) vb.push_back(*vit1);
+        for (; vit1 != v1.end(); vit1++)
+            vb.push_back(*vit1);
     }
     if (vit2 != v2.end()) {
-        for (; vit2 != v2.end(); vit2++) vb.push_back(*vit2);
+        for (; vit2 != v2.end(); vit2++)
+            vb.push_back(*vit2);
     }
 
     int vid;
@@ -666,15 +719,17 @@ void PathTree::mergeVector(vector<int> &v1, vector<int> &v2) {
         else {
             while (!visitstack.empty()) {
                 vid = visitstack.back();
-                if (!(labels[vid][0] <= labels[*vit1][0] && labels[vid][1] >= labels[*vit1][1]))
+                if (!(labels[vid][0] <= labels[*vit1][0]
+                        && labels[vid][1] >= labels[*vit1][1]))
                     visitstack.pop_back();
                 else
                     break;
             }
             if (!visitstack.empty()) {
                 vid = visitstack.back();
-                if (labels[vid][0] <= labels[*vit1][0] && labels[vid][1] >= labels[*vit1][1] &&
-                    labels[vid][2] <= labels[*vit1][2]) {
+                if (labels[vid][0] <= labels[*vit1][0]
+                    && labels[vid][1] >= labels[*vit1][1]
+                    && labels[vid][2] <= labels[*vit1][2]) {
                     mark[i] = false;
                 } else
                     visitstack.push_back(*vit1);
@@ -685,11 +740,13 @@ void PathTree::mergeVector(vector<int> &v1, vector<int> &v2) {
 
     v1 = vector<int>();
     for (i = 0; i < vb.size(); i++) {
-        if (mark[i]) v1.push_back(vb[i]);
+        if (mark[i])
+            v1.push_back(vb[i]);
     }
 }
 
-void PathTree::insertSet(set<int> &s1, set<int> &s2) {
+void PathTree::insertSet(set<int>& s1, set<int>& s2)
+{
     set<int>::iterator sit1, sit2;
     bool insert;
     int pre1, post1, pre2, post2;
@@ -700,33 +757,41 @@ void PathTree::insertSet(set<int> &s1, set<int> &s2) {
         for (sit1 = s1.begin(); sit1 != s1.end();) {
             pre1 = labels[*sit1][0];
             post1 = labels[*sit1][1];
-            if (pre2 >= pre1 && post2 <= post1 && labels[*sit1][2] < labels[*sit2][2]) {
+            if (pre2 >= pre1 && post2 <= post1
+                && labels[*sit1][2] < labels[*sit2][2]) {
                 insert = false;
                 break;
-            } else if (pre2 <= pre1 && post2 >= post1 && labels[*sit1][2] > labels[*sit2][2]) {
+            } else if (pre2 <= pre1 && post2 >= post1
+                && labels[*sit1][2] > labels[*sit2][2]) {
                 s1.erase(*sit1);
                 sit1++;
             } else
                 sit1++;
         }
-        if (insert) s1.insert(*sit2);
+        if (insert)
+            s1.insert(*sit2);
     }
 }
 
-void PathTree::displayLabels() {
+void PathTree::displayLabels()
+{
     vector<int>::iterator vit;
     vector<int>::iterator sit;
     for (vit = grts.begin(); vit != grts.end(); vit++) {
         vector<int> pset = out_uncover[*vit];
-        if (pset.size() <= 0) continue;
+        if (pset.size() <= 0)
+            continue;
         sort(pset.begin(), pset.end());
         cout << *vit << ": ";
-        for (sit = pset.begin(); sit != pset.end(); sit++) cout << *sit << " ";
+        for (sit = pset.begin(); sit != pset.end(); sit++)
+            cout << *sit << " ";
         cout << endl;
     }
 }
 
-double PathTree::cover_ratio() {
+double
+PathTree::cover_ratio()
+{
     int gsize = g.num_vertices();
 
     int counter = 0;
@@ -752,7 +817,9 @@ double PathTree::cover_ratio() {
             pre2 = labels[trg][0];
             post2 = labels[trg][1];
 
-            if (labels[src][2] <= labels[trg][2] && post2 >= pre1 && post2 <= post1) counter++;
+            if (labels[src][2] <= labels[trg][2] && post2 >= pre1
+                && post2 <= post1)
+                counter++;
         }
     }
 
@@ -761,7 +828,9 @@ double PathTree::cover_ratio() {
     return (counter * 1.0) / (tcsize * 1.0);
 }
 
-double PathTree::compress_ratio() {
+double
+PathTree::compress_ratio()
+{
     int gsize = g.num_vertices();
 
     int counter = 0;
@@ -777,18 +846,21 @@ double PathTree::compress_ratio() {
     }
     cout << "#TC size = " << tcsize << endl;
     int uncover_size = 0;
-    vector<vector<int> >::iterator vit;
+    vector<vector<int>>::iterator vit;
     for (vit = out_uncover.begin(); vit != out_uncover.end(); vit++) {
         uncover_size += vit->size();
     }
-    map<int, vector<int> >::iterator mit;
-    for (mit = comp_table.begin(); mit != comp_table.end(); mit++) uncover_size += mit->second.size();
+    map<int, vector<int>>::iterator mit;
+    for (mit = comp_table.begin(); mit != comp_table.end(); mit++)
+        uncover_size += mit->second.size();
 
     return (uncover_size * 1.0) / (tcsize * 1.0);
 }
 
-bool PathTree::reach(int src, int trg) {
-    if (src == trg) return true;
+bool PathTree::reach(int src, int trg)
+{
+    if (src == trg)
+        return true;
 
     int pre1, post1, pre2, post2;
     pre1 = labels[src][0];
@@ -796,22 +868,25 @@ bool PathTree::reach(int src, int trg) {
     //	pre2 = labels[trg][0];
     post2 = labels[trg][1];
 
-    if (labels[src][2] <= labels[trg][2] && post2 >= pre1 && post2 <= post1) return true;
+    if (labels[src][2] <= labels[trg][2] && post2 >= pre1 && post2 <= post1)
+        return true;
 
     //	set<int> si = out_uncover[src];
     //	set<int>::iterator sit;
-    vector<int> &si = out_uncover[src];
+    vector<int>& si = out_uncover[src];
     vector<int>::iterator sit;
     for (sit = si.begin(); sit != si.end(); sit++) {
         pre1 = labels[*sit][0];
         post1 = labels[*sit][1];
-        if (labels[*sit][2] <= labels[trg][2] && post2 >= pre1 && post2 <= post1) return true;
+        if (labels[*sit][2] <= labels[trg][2] && post2 >= pre1 && post2 <= post1)
+            return true;
     }
 
     return false;
 }
 
-bool PathTree::reach_dc(int src, int trg) {
+bool PathTree::reach_dc(int src, int trg)
+{
     if (!effective) {
         bool result = reach(src, trg);
         return result;
@@ -823,11 +898,12 @@ bool PathTree::reach_dc(int src, int trg) {
     pre2 = labels[trg][0];
     post2 = labels[trg][1];
 
-    if (labels[src][2] <= labels[trg][2] && post2 >= pre1 && post2 <= post1) return true;
+    if (labels[src][2] <= labels[trg][2] && post2 >= pre1 && post2 <= post1)
+        return true;
 
     int gsize = g.num_vertices();
     vector<int>::iterator sit;
-    vector<int> &si = out_uncover[src];
+    vector<int>& si = out_uncover[src];
     vector<int>::iterator vit;
     vector<int> tmp_si;
     vector<int> neg_si;
@@ -840,8 +916,8 @@ bool PathTree::reach_dc(int src, int trg) {
         else
             tab_index = *vit;
     }
-    set_difference(comp_table[tab_index].begin(), comp_table[tab_index].end(), neg_si.begin(), neg_si.end(),
-                   back_inserter(tmp_si));
+    set_difference(comp_table[tab_index].begin(), comp_table[tab_index].end(),
+        neg_si.begin(), neg_si.end(), back_inserter(tmp_si));
 
     // for test
     //	cout << "query " << src << "->" << trg << endl;
@@ -850,7 +926,9 @@ bool PathTree::reach_dc(int src, int trg) {
         {
             pre1 = labels[*vit][0];
             post1 = labels[*vit][1];
-            if (labels[*vit][2] <= labels[trg][2] && post2 >= pre1 && post2 <= post1) return true;
+            if (labels[*vit][2] <= labels[trg][2] && post2 >= pre1
+                && post2 <= post1)
+                return true;
         }
     }
 
@@ -858,23 +936,27 @@ bool PathTree::reach_dc(int src, int trg) {
 }
 
 // for test
-bool PathTree::test_reach(int src, int trg) {
+bool PathTree::test_reach(int src, int trg)
+{
     bool r = reach(src, trg);
     if (r != tcm[make_pair(src, trg)]) {
-        cout << "Wrong: [" << src << "] to [" << trg << "] reach = " << r << endl;
+        cout << "Wrong: [" << src << "] to [" << trg << "] reach = " << r
+             << endl;
         return false;
     }
 
     return true;
 }
 
-bool PathTree::test_reach_dc(int src, int trg) {
+bool PathTree::test_reach_dc(int src, int trg)
+{
     bool r = reach_dc(src, trg);
     if (r != tcm[make_pair(src, trg)]) {
-        cout << "Wrong: [" << src << "] to [" << trg << "] reach = " << r << endl;
+        cout << "Wrong: [" << src << "] to [" << trg << "] reach = " << r
+             << endl;
         return false;
     }
 
     return true;
 }
-}  // namespace ptree
+} // namespace ptree

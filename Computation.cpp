@@ -26,7 +26,9 @@
 using namespace std;
 using json = nlohmann::json;
 
-double getMemoryUsageGB() {
+double
+getMemoryUsageGB()
+{
     std::ifstream status("/proc/self/status");
     std::string line;
     while (std::getline(status, line)) {
@@ -35,24 +37,27 @@ double getMemoryUsageGB() {
             if (pos != std::string::npos) {
                 // 将读取的内存大小从 kB 转换为 GB
                 size_t memSizeKB = std::stoull(line.substr(pos));
-                return memSizeKB / 1048576.0;  // 1 GB = 1048576 kB
+                return memSizeKB / 1048576.0; // 1 GB = 1048576 kB
             }
         }
     }
-    return 0;  // 如果没有找到 VmSize，返回0
+    return 0; // 如果没有找到 VmSize，返回0
 }
 
 double maxMem = 0;
-void monitorMemory() {
+void monitorMemory()
+{
     while (true) {
-        double memoryUsageGB = getMemoryUsageGB();  // 读取内存使用量并转换为 GB
+        double memoryUsageGB = getMemoryUsageGB(); // 读取内存使用量并转换为 GB
         // std::cout << "Current memory usage: " << memoryUsageGB << " GB" <<
         LOG("Current memory usage = {} GB", memoryUsageGB);
         maxMem = max(maxMem, memoryUsageGB);
-        sleep(10);  // 每10秒执行一次
+        sleep(10); // 每10秒执行一次
     }
 }
-ptree::Graph readGraph(string path) {
+ptree::Graph
+readGraph(string path)
+{
     ptree::Graph g;
     int num;
     ifstream ifs(path);
@@ -71,7 +76,8 @@ ptree::Graph readGraph(string path) {
     return g;
 }
 
-void prinfGraph(ptree::Graph g) {
+void prinfGraph(ptree::Graph g)
+{
     for (int i = 0; i < g.num_vertices(); i++) {
         cout << i << ": ";
         for (auto edge : g.out_edges(i)) {
@@ -80,15 +86,18 @@ void prinfGraph(ptree::Graph g) {
         cout << "\n";
     }
     for (int i = 0; i < g.num_vertices(); i++) {
-        cout << i << ": indegree " << g.in_degree(i) << " outdegree " << g.out_degree(i) << "\n";
+        cout << i << ": indegree " << g.in_degree(i) << " outdegree "
+             << g.out_degree(i) << "\n";
     }
     cout << "edges = " << g.num_edges() << "\n";
 }
 
-void exportQuery(string path, vector<CCR::queryInfo> &pairs) {
+void exportQuery(string path, vector<CCR::queryInfo>& pairs)
+{
     ofstream ofs(path);
     for (auto pair : pairs) {
-        ofs << pair.u << " " << pair.w << " " << pair.start << " " << pair.end << "\n";
+        ofs << pair.u << " " << pair.w << " " << pair.start << " " << pair.end
+            << "\n";
     }
 }
 
@@ -107,8 +116,10 @@ DEFINE_int32(splitData, 0, "阈值，控制是否进行点切割");
 
 string querypairfilename = "../result/query";
 
-int main(int argc, char *argv[]) {
-    if (argc == 1) return 1;
+int main(int argc, char* argv[])
+{
+    if (argc == 1)
+        return 1;
     spdlog::cfg::load_env_levels();
     gflags::ParseCommandLineFlags(&argc, &argv, true);
     auto input_path = FLAGS_inputPath;
@@ -129,41 +140,41 @@ int main(int argc, char *argv[]) {
     }
 
     // string queryResFilePath = FLAGS_queryFilePath + "_" + ".queryres";
-    string reachQueryPairs = FLAGS_queryFilePath+"_1";
-    string unreachQueryPairs = FLAGS_queryFilePath+"_0";
+    string reachQueryPairs = FLAGS_queryFilePath + "_1";
+    string unreachQueryPairs = FLAGS_queryFilePath + "_0";
     auto Reachpairs = CCR::readQuery(reachQueryPairs);
     auto UnReachpairs = CCR::readQuery(unreachQueryPairs);
-    // 1代表可达查询，0代表不可达查询
-    // auto pairs = CCR::readQuery(FLAGS_queryFilePath, queryResFilePath, FLAGS_reach);
+    // auto pairs = CCR::readQuery(FLAGS_queryFilePath, queryResFilePath,
+    // FLAGS_reach);
     if (Reachpairs.empty()) {
         ERROR("no query");
         exit(-1);
     }
-    LOG("origin reach pairs size = {}, unreach size = {}", Reachpairs.size(),UnReachpairs.size());
-    while (Reachpairs.size() < 100000) {
-        std::vector<CCR::queryInfo> temp;
-        for (auto element : Reachpairs) {
-            if (Reachpairs.size() + temp.size() >= 100000) {
-                break;
-            }
-            temp.push_back(element);
-        }
-        Reachpairs.insert(Reachpairs.end(), temp.begin(), temp.end());
-    }
+    LOG("origin reach pairs size = {}, unreach size = {}", Reachpairs.size(),
+        UnReachpairs.size());
 
     CCR::Timer timer;
     vector<int> queryRes(Reachpairs.size(), 0);
     uint64_t trans_time = 0;
-    unsigned bgEdgeNum = 0;
-    for (const auto &Neighbors : bg.adj_matrix_l) bgEdgeNum += Neighbors.size();
+    
     timer.start();
     ptree::Graph g = CCR::transformation(bg, FLAGS_delta);
     timer.ticker();
     trans_time = timer.get_last_consuming();
     LOG("transformation time = {}(ms)", timer.get_last_consuming());
-   
+
+
     Partitioner partitioner(FLAGS_minBlock);
     partitioner.threshold = FLAGS_splitData;
+
+    // int blockNum = partitioner.GetPerfectPartitionNum(g) - 1;
+    // if (blockNum < 2) {
+    //     blockNum = 2;
+    //     ERROR("invaild block num, set block = 2");
+    // }
+
+    // partitioner.setMinBlkSize(blockNum);
+
     uint64_t partition_time;
     timer.ticker();
     partitioner.runPartition(g, algo);
@@ -173,14 +184,15 @@ int main(int argc, char *argv[]) {
 
     uint64_t local_algo_time;
     timer.ticker();
-    partitioner.runLocalReachability();  // 内部可达算法
+    partitioner.runLocalReachability(); // 内部可达算法
     timer.ticker();
     local_algo_time = timer.get_last_consuming();
-    LOG("local algorithm {}, time = {} (ms)", algo, timer.get_last_consuming());
+    LOG("local algorithm {}, time = {} (ms)", algo,
+        timer.get_last_consuming());
 
     uint64_t eqClassTime;
     timer.ticker();
-    partitioner.ComputeBorder(g);  // 找等价类
+    partitioner.ComputeBorder(g); // 找等价类
     timer.ticker();
     eqClassTime = timer.get_last_consuming();
     LOG("ComputeBorder = {} (ms)", timer.get_last_consuming());
@@ -188,7 +200,7 @@ int main(int argc, char *argv[]) {
     // 边界可达性算法
     uint64_t eqGraphTime;
     timer.ticker();
-    partitioner.runBorderReachability(g);  // 构造边界图
+    partitioner.runBorderReachability(g); // 构造边界图
     timer.ticker();
     eqGraphTime = timer.get_last_consuming();
     LOG("border Reachability = {} (ms)", timer.get_last_consuming());
@@ -213,16 +225,21 @@ int main(int argc, char *argv[]) {
     j["local_indexing_time(ms)"] = local_algo_time;
     j["EqSet_time(ms)"] = eqClassTime;
     j["ConGraph_indexing_time(ms)"] = eqGraphTime;
-    j["Connection_latency_threshold(s)"] =  FLAGS_delta;
+    j["Connection_latency_threshold(s)"] = FLAGS_delta;
 
-    j["ConGraph_node_num"] = std::to_string(partitioner.eqClassGraph.num_vertices());
-    j["ConGraph_edge_num"] = std::to_string(partitioner.eqClassGraph.num_edges());
+    j["ConGraph_node_num"]
+        = std::to_string(partitioner.eqClassGraph.num_vertices());
+    j["ConGraph_edge_num"]
+        = std::to_string(partitioner.eqClassGraph.num_edges());
     j["Memory(GB)"] = maxMem;
     j["TotalPosQuery(ms)"] = queryTime;
-    j["AvgPosQuery(us)"] = queryTime*1000 / (double)Reachpairs.size();
+    j["AvgPosQuery(us)"] = queryTime * 1000 / (double)Reachpairs.size();
     j["TotalNegQuery(ms)"] = queryTimeNoReach;
-    j["AvgNegQuery(us)"] = queryTimeNoReach*1000 / (double)UnReachpairs.size();
-    j["Index_construction_time(ms)"] = trans_time + partition_time + local_algo_time + eqClassTime + eqGraphTime;
+    j["AvgNegQuery(us)"]
+        = queryTimeNoReach * 1000 / (double)UnReachpairs.size();
+    j["Index_construction_time(ms)"] = trans_time + partition_time
+        + local_algo_time + eqClassTime
+        + eqGraphTime;
     // j["index size"] = partitioner.getIndexSize();
     j["DAG_node_num"] = g.num_vertices();
     j["DAG_edge_num"] = g.num_edges();
@@ -238,9 +255,10 @@ int main(int argc, char *argv[]) {
     j["edeg_cut"] = sum / g.num_edges();
     std::ofstream ofile(FLAGS_outputPath);
     ofile << j << std::endl;
-    LOG("run {} query time = {}(ms), total time = {}, build index time = {}, max "
+    LOG("run {} query time = {}(ms), total time = {}, build index time = {}, "
+        "max "
         "memory usage = {}",
-        Reachpairs.size(), timer.get_last_consuming(), timer.get_total_consuming(),
+        Reachpairs.size(), timer.get_last_consuming(),
+        timer.get_total_consuming(),
         timer.get_total_consuming() - timer.get_last_consuming(), maxMem);
 }
-
