@@ -51,6 +51,26 @@ void setBitAtPosition(std::vector<uint64_t> &bits, uint64_t pos) {
     bits[elementIndex] |= (1ULL << bitPosition);
 }
 
+void getBitPositions(const std::vector<uint64_t> &bits, std::vector<int> &positions) {
+    for (uint64_t i = 0; i < bits.size(); ++i) {
+        uint64_t currentBits = bits[i];
+
+        
+        if (currentBits == 0) {
+            continue;
+        }
+
+        
+        for (uint64_t bitPos = 0; bitPos < 64; ++bitPos) {
+            if (currentBits & (1ULL << bitPos)) {
+                
+                uint64_t globalPos = i * 64 + bitPos;
+                positions.push_back(globalPos);
+            }
+        }
+    }
+}
+
 struct Element {
     int value;
     size_t vecIndex;   
@@ -228,18 +248,38 @@ void Partitioner::runLocalReachability() {
 void Partitioner::runBorderReachability(ptree::Graph &graph) {
     
     LOG("before allocate, node size = {}", this->eqClassGraph.num_vertices());
+    for (int i = 0; i < blocks.size(); i++) {
+        
+    }
+    LOG("after allocate, node size = {}", this->eqClassGraph.num_vertices());
+
+    
+    
+    
+    
+    
+    
+    for (size_t i = 0; i < blocks.size(); i++) {
+        
+    }
+
+    LOG("allocate EQclass Border Node done, #Nodes = {}", this->eqClassGraph.num_vertices());
+
     
 #ifdef MTHREAD
 #pragma omp parallel for
 #endif
     for (int i = 0; i < blocks.size(); i++) {
+        
+        
+        
         blocks[i]->buildBorderLink3(this->eqClassGraph, graph, this->blocks);
+        
+        
     }
 
     
     LOG("[AFTER] eq vertex size = {}, edge size = {}", eqClassGraph.num_vertices(), eqClassGraph.num_edges());
-    this->index_size += eqClassGraph.num_edges();
-    this->index_size += eqClassGraph.num_vertices();
 #ifdef PathTreeBorder
     
     LOG("Border #construction begin");
@@ -269,7 +309,7 @@ void Partitioner::runBorderReachability(ptree::Graph &graph) {
     this->topChainMeta_partitioner.feline();
     this->topChainMeta_partitioner.handle();
     this->topChainMeta_partitioner.copyIndex();
-    this->topChainMeta_partitioner.flag = new int[topChainMeta_partitioner.n];
+    this->topChainMeta_partitioner.flagVec = vector<int>(topChainMeta_partitioner.n, 0);
 #endif
 }
 
@@ -602,7 +642,8 @@ void TopChainBlock::runReachability() {
     this->topChainMeta.feline();
     this->topChainMeta.handle();
     this->topChainMeta.copyIndex();
-    this->topChainMeta.flag = new int[topChainMeta.n];
+    
+    this->topChainMeta.flagVec = vector<int>(topChainMeta.n, 0);
 }
 
 bool TopChainBlock::query(int src, int dst) {
@@ -617,6 +658,7 @@ bool TopChainBlock::query(int src, int dst) {
     auto u = gt.getFrom(s, start, end);
     auto w = gt.getTo(d, start, end);
     
+    topChainMeta.mark++;
 
     bool arrive;
     if (u < 0 || w < 0) {
@@ -644,167 +686,155 @@ bool file_exists(const std::string &filename) {
 
 void queryTransform(BiGraph &bg, ptree::Graph &g, int u, int w, time_t start, time_t end, int &src, int &dst) {
     int v1 = -1;
-    int v2 = -1;
+    int v1_idx = -1;
+
     
     
     for (int i = 0; i < bg.adj_matrix_u[u].size(); i++) {
-        if (bg.timeSection_u[u][i].second <= start) {
+        
+        if (bg.timeSection_u[u][i].first >= end) {
+            break;
+        }
+
+        
+        if (bg.timeSection_u[u][i].second < start) {
+            continue;
+        }
+
+        
+        int candidate_v1 = bg.adj_matrix_u[u][i];
+        if (bg.timeTable_u[candidate_v1].empty()) {
             
-            if (i == 0) {
-                break;
-            }
-            v1 = bg.adj_matrix_u[u][i - 1];
-
-            int k = i - 2;
-            while (bg.timeTable_u[v1].empty() && k >= 0) {
-                v1 = bg.adj_matrix_u[u][k];
-                k--;
-            }
-
-            if (bg.timeTable_u[v1].empty() && k == -1) {
-                v1 = -1;
-            }
-            break;
+            continue;
         }
 
-        if (i == bg.adj_matrix_u[u].size() - 1 && v1 == -1) {
-            if (i == 0) {
-                break;
-            }
-            v1 = bg.adj_matrix_u[u][i];
-            int k = i - 2;
-            while (bg.timeTable_u[v1].empty() && k >= 0) {
-                v1 = bg.adj_matrix_u[u][k];
-                k--;
-            }
-            if (bg.timeTable_u[v1].empty() && k == -1) {
-                v1 = -1;
-                
-                
-            }
-            break;
-        }
-    }
+        
+        
+        int candidate_v1_idx = -1;
 
-    
-    int pos2;
-    for (int i = 0; i < bg.adj_matrix_u[w].size(); i++) {
-        if (bg.timeSection_u[w][i].first < end) {
-            if (i == 0) {
-                v2 = bg.adj_matrix_u[w][0];
-                pos2 = 0;
-            } else if (bg.timeSection_u[w][i - 1].first < end) {
-                v2 = bg.adj_matrix_u[w][i - 1];
-                pos2 = i - 1;
+        int left = 0;
+        int right = bg.timeTable_u[candidate_v1].size() - 1;
+        while (left <= right) {
+            int mid = left + (right - left) / 2;
+
+            
+            if (bg.timeTable_u[candidate_v1][mid].second > start) {
+                
+                if (bg.timeTable_u[candidate_v1][mid].second <= bg.timeSection_u[u][i].second &&
+                    bg.timeTable_u[candidate_v1][mid].first >= bg.timeSection_u[u][i].first) {
+                    
+                    candidate_v1_idx = mid;
+                    right = mid - 1;
+                } else {
+                    
+                    if (bg.timeTable_u[candidate_v1][mid].first < bg.timeSection_u[u][i].first) {
+                        
+                        left = mid + 1;
+                    } else {
+                        
+                        right = mid - 1;
+                    }
+                }
             } else {
-                v2 = bg.adj_matrix_u[w][i];
-                pos2 = i;
+                
+                left = mid + 1;
             }
+        }
+
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+
+        if (candidate_v1_idx != -1) {
+            
+            v1 = candidate_v1;
+            v1_idx = candidate_v1_idx;
+            
+            break;
+        }
+    }
+
+    int v2 = -1;
+    int v2_idx = -1;
+
+    for (int i = bg.adj_matrix_u[w].size() - 1; i >= 0; i--) {
+        
+        if (bg.timeSection_u[w][i].second <= start) {
+            break;
+        }
+
+        
+        if (bg.timeSection_u[w][i].first > end) {
+            continue;
+        }
+
+        int candidate_v2 = bg.adj_matrix_u[w][i];
+        if (bg.timeTable_u[candidate_v2].empty()) {
+            
+            
+            continue;
+        }
+
+        
+        
+        int candidate_v2_idx = -1;
+
+        int left = 0;
+        int right = bg.timeTable_u[candidate_v2].size() - 1;
+        while (left <= right) {
+            int mid = left + (right - left) / 2;
 
             
-            int k = i - 1;
-            while (bg.timeTable_u[v2].empty() && k >= 0) {
-                v2 = bg.adj_matrix_u[w][k];
-                pos2 = k;
-                k--;
+            if (bg.timeTable_u[candidate_v2][mid].first < end) {
+                
+                if (bg.timeTable_u[candidate_v2][mid].second <= bg.timeSection_u[w][i].second &&
+                    bg.timeTable_u[candidate_v2][mid].first >= bg.timeSection_u[w][i].first) {
+                    
+                    candidate_v2_idx = mid;
+                    left = mid + 1;
+                } else {
+                    
+                    if (bg.timeTable_u[candidate_v2][mid].first < bg.timeSection_u[w][i].first) {
+                        
+                        left = mid + 1;
+                    } else {
+                        
+                        right = mid - 1;
+                    }
+                }
+            } else {
+                
+                right = mid - 1;
             }
-            if (bg.timeTable_u[v2].empty() && k == -1) v2 = -1;
+        }
+
+        if (candidate_v2_idx != -1) {
+            
+            v2 = candidate_v2;
+            v2_idx = candidate_v2_idx;
+            
             break;
-
-            if (i == bg.adj_matrix_u[w].size() - 1 && bg.timeSection_u[w][i].first >= end) break;
         }
     }
 
     
-    if (v1 == -1 || v2 == -1) {
+    if (v1 == -1 || v2 == -1 || v1_idx == -1 || v2_idx == -1) {
         src = -1;
         dst = -1;
         return;
     }
-
-    
-    
-
-    int v1_idx = -1;
-    time_t mm = std::numeric_limits<time_t>::max();
-    
-    
-    
-
-    for (int i = 0; i < bg.timeTable_u[v1].size(); i++) {
-        if (bg.timeTable_u[v1][i].second > start) {
-            if (bg.timeTable_u[v1][i].second < mm) {
-                mm = bg.timeTable_u[v1][i].second;
-                v1_idx = i;
-            }
-        }
-    }
-
-    
-    
-    
-    if (v1_idx >= 0) {
-    } else {
-        src = -1;
-        dst = -1;
-        return;
-    }
-    
-    
-    
-    
-    
-    
-    
-    int v2_idx = -1;
-    
-    
-    
-    mm = 0;
-
-    for (int i = 0; i < bg.timeTable_u[v2].size(); i++) {
-        if (bg.timeTable_u[v2][i].first < end) {
-            if (bg.timeTable_u[v2][i].first > mm) {
-                mm = bg.timeTable_u[v2][i].first;
-                v2_idx = i;
-            }
-        }
-    }
-
-    if (v2_idx >= 0) {
-        
-    } else {
-        src = -1;
-        dst = -1;
-        return;
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    }
-    
-    
-    
-    
-    
-    
 
     src = g.cnum(make_pair(v1, bg.timeTable_u[v1][v1_idx].first));
-    
     dst = g.cnum(make_pair(v2, bg.timeTable_u[v2][v2_idx].first));
-    
-    
-    
-    
-    
-    
-    
 }
 
 #ifdef NEWSETTING
@@ -928,6 +958,28 @@ bool dfs(ptree::Graph &graph, int gid, Partitioner *p) {
     return false;
 }
 
+bool bfsTool(ptree::Graph &graph, int src, int dst) {
+    unordered_set<int> visited;
+    queue<int> q;
+    q.push(src);
+    visited.insert(src);
+    while (!q.empty()) {
+        int u = q.front();
+        q.pop();
+        
+        if (u == dst) {
+            return true;
+        }
+        for (auto t : graph.out_edges(u)) {
+            if (visited.count(t) == 0) {
+                visited.insert(t);
+                q.push(t);
+            }
+        }
+    }
+    return false;
+}
+
 void Partitioner::runQueryWithBfs(BiGraph &bg, ptree::Graph &graph, std::vector<CCR::queryInfo> &queryInfo,
                                   std::vector<int> &queryRes) {
     
@@ -945,6 +997,11 @@ void Partitioner::runQueryWithBfs(BiGraph &bg, ptree::Graph &graph, std::vector<
     int sum_bfs = 0;
     int sum_bfs_reach = 0;
     bool flag = false;
+    CCR::Timer timer;
+    uint64_t transTime = 0;
+    timer.start();
+    int canNotFountCount = 0;
+
     for (auto const &info : queryInfo) {
         idx++;
         auto u = info.u;
@@ -959,17 +1016,21 @@ void Partitioner::runQueryWithBfs(BiGraph &bg, ptree::Graph &graph, std::vector<
 
         int src = u;
         int dst = w;
+        timer.ticker();
         queryTransform(bg, graph, u, w, start, end, src, dst);
+        timer.ticker();
+
         if (src < 0 || dst < 0) {
             queryRes[idx - 1] = false;
             continue;
         }
 
         if (graph[src].partition == graph[dst].partition) {
-            
             if (this->blocks[graph[src].partition]->query(src, dst)) {
                 queryRes[idx - 1] = true;
                 cnt1++;
+                TopChainBlock *tpb = dynamic_cast<TopChainBlock *>(this->blocks[graph[src].partition]);
+                
             }
         }
 
@@ -979,13 +1040,19 @@ void Partitioner::runQueryWithBfs(BiGraph &bg, ptree::Graph &graph, std::vector<
 
         dst = getInBorder(dst, graph);
         src = getOutBorder(src, graph);
+
         if (src < 0 || dst < 0) {
             queryRes[idx - 1] = false;
             continue;
         }
         int sum = 0;
 #ifdef TWOHOPBORDER
-        queryRes[idx - 1] = runIndexQuery(src, dst);
+        
+        queryRes[idx - 1] = runIndexQuery(src, dst, idx);
+        
+        
+        
+        
 #elif defined PathTreeBorder
         queryRes[idx - 1] = runPTQuery(src, dst);
 #else
@@ -997,7 +1064,16 @@ void Partitioner::runQueryWithBfs(BiGraph &bg, ptree::Graph &graph, std::vector<
         }
         queryRes[idx - 1] = runBiBFS(src, dst, sum, idx);
 #endif
+        
+        
+        
+        sum_bfs++;
+        if (queryRes[idx - 1]) {
+            sum_bfs_reach++;
+        }
     }
+    
+
 }
 
 int Partitioner::getInBorder(int dst, ptree::Graph &graph) {
@@ -1017,9 +1093,9 @@ bool Partitioner::runPTQuery(int src, int dst) {
     return false;
 }
 
-bool Partitioner::runIndexQuery(int src, int dst) {
+bool Partitioner::runIndexQuery(int src, int dst, int mk) {
     bool arrive;
-
+    this->topChainMeta_partitioner.mark = mk;
     if (src == dst) {
         return true;
     }
@@ -1027,6 +1103,7 @@ bool Partitioner::runIndexQuery(int src, int dst) {
     auto end = this->eqClassGraph[dst].start;
     auto u = this->gt_partitioner.getFrom(src, start, end);
     auto w = this->gt_partitioner.getTo(dst, start, end);
+
     if (u < 0 || w < 0) {
         arrive = 0;
     } else if (u == w)
@@ -1041,7 +1118,6 @@ bool Partitioner::runIndexQuery(int src, int dst) {
     else if (this->topChainMeta_partitioner.intersect(u, w))
         arrive = 1;
     else {
-        this->topChainMeta_partitioner.mark++;
         arrive = this->topChainMeta_partitioner.query(u, w);
     }
     if (arrive) {
@@ -1056,8 +1132,9 @@ bool Partitioner::runBiBFSBy2Hop(int q1hi, int q2hi, int &sum, int idx) {
         return false;
     }
     bool arrive = false;
+    
 #ifdef INNODE
-    int dst = que2[q2hi - 1]; 
+    int dst = que2[q2hi - 1];  
     int q1lo = 0;
     while (q1hi > q1lo) {
         auto src = que1[q1lo++];
@@ -1114,7 +1191,10 @@ bool Partitioner::runBiBFSBy2Hop(int q1hi, int q2hi, int &sum, int idx) {
 }
 
 bool Partitioner::runBiBFS(int src, int dst, int &sum, int idx) {
+    
+    
     auto &g = this->eqClassGraph;
+    
     int q1lo = 0;
     int q2lo = 0;
     int q1hi = 1;
@@ -1125,7 +1205,9 @@ bool Partitioner::runBiBFS(int src, int dst, int &sum, int idx) {
     sum = 0;
     while (q1lo < q1hi and q2lo < q2hi) {
         sum++;
-       
+        
+        
+        
         if (q1hi - q1lo < q2hi - q2lo) {
             auto origin = q1hi;
             for (int i = q1lo; i < origin; i++) {
@@ -1139,6 +1221,7 @@ bool Partitioner::runBiBFS(int src, int dst, int &sum, int idx) {
                         return true;
                     } else if (visited_outter[edge] != idx) {
                         visited_outter[edge] = idx;
+                        
                         this->que1[q1hi++] = edge;
                     }
                 }
@@ -1155,6 +1238,7 @@ bool Partitioner::runBiBFS(int src, int dst, int &sum, int idx) {
                     if (visited_outter[edge] == idx) {
                         return true;
                     } else if (visited_outter[edge] != -idx) {
+                        
                         visited_outter[edge] = -idx;
                         this->que2[q2hi++] = edge;
                     }
@@ -1175,6 +1259,28 @@ string printVector(vector<int> &vec) {
     return ss.str();
 }
 
+void Block::allocateBaseEqClass4PreCompute(ptree::Graph &eqGraph, ptree::Graph &graph) {
+    std::unordered_map<size_t, int> &table = global_partition->GlobalRecordTableOut;
+    std::unordered_map<size_t, int> &table2 = global_partition->GlobalRecordTableIn;
+    int totalSize = 0;
+    
+    for (int i = 0; i < localGraph.num_vertices(); i++) {
+        if (localGraph[i].border_in) {
+            if (global_partition->SingleNode2EqGraphNode.find(localGraph[i].gid) ==
+                global_partition->SingleNode2EqGraphNode.end()) {
+                int idx = global_partition->SingleNode2EqGraphNode.size();
+                global_partition->SingleNode2EqGraphNode[localGraph[i].gid] = idx;
+                vector<uint64_t> tmp_vec(this->global_partition->bitElemNumber, 0);
+                auto gid = localGraph[i].gid;
+                setBitAtPosition(tmp_vec, graph[gid].global_order);
+                auto hash_res = hash_vector(tmp_vec);
+                table[hash_res] = idx;
+                table2[hash_res] = idx;
+            }
+        }
+    }
+}
+
 void Block::allocateBaseEqClass(ptree::Graph &eqGraph, ptree::Graph &graph) {
     std::unordered_map<size_t, int> &table = global_partition->GlobalRecordTableOut;
     std::unordered_map<size_t, int> &table2 = global_partition->GlobalRecordTableIn;
@@ -1189,6 +1295,9 @@ void Block::allocateBaseEqClass(ptree::Graph &eqGraph, ptree::Graph &graph) {
                 vector<uint64_t> tmp_vec(this->global_partition->bitElemNumber, 0);
                 auto gid = localGraph[i].gid;
                 setBitAtPosition(tmp_vec, graph[gid].global_order);
+                
+                
+                eqGraph[idx].bits = tmp_vec;
                 auto hash_res = hash_vector(tmp_vec);
                 table[hash_res] = idx;
                 table2[hash_res] = idx;
@@ -1198,12 +1307,15 @@ void Block::allocateBaseEqClass(ptree::Graph &eqGraph, ptree::Graph &graph) {
 }
 
 void Partitioner::ComputeBorder(ptree::Graph &graph) {
+    
+    
     unordered_set<int> table;
     for (int i = 0; i < graph.num_vertices(); i++) {
         for (auto edge : graph.out_edges(i)) {
             if (graph[i].partition != graph[edge].partition) {
                 int idx = graph[i].partition;
                 int toidx = graph[edge].partition;
+                
                 blocks[idx]->addNode(graph[edge]);
                 blocks[idx]->addEdge(i, edge);
 
@@ -1235,6 +1347,11 @@ void Partitioner::ComputeBorder(ptree::Graph &graph) {
         blocks[i].fetchClass(this->borderGlobal2Local);
 #endif
     }
+
+    for (int i = 0; i < graph.num_vertices(); i++) {
+        graph[i].bits.clear();
+    }
+
     for (int i = 0; i < blocks.size(); i++) {
 #ifdef PATHTREE
         blocks[i].fetchClassByPT(this->borderGlobal2Local);
@@ -1247,6 +1364,7 @@ void Partitioner::ComputeBorder(ptree::Graph &graph) {
         blocks[i].fetchClass(this->borderGlobal2Local);
 #endif
     }
+    LOG("eqClass size = {}-{}", eqClassGraph.num_vertices(), eqClassGraph.num_edges());
 }
 
 void Block::fetchClass(std::unordered_map<int, int> &borderGlobal2Local) {}
@@ -1254,6 +1372,7 @@ void Block::fetchClass(std::unordered_map<int, int> &borderGlobal2Local) {}
 void Block::fetchClassByPT(std::unordered_map<int, int> &borderGlobal2Local) {}
 
 void Block::fetchClassByBorderBFSIn(ptree::Graph &eqGraph, ptree::Graph &graph) {
+    
     std::unordered_map<size_t, int> &table2 = global_partition->GlobalRecordTableIn;
     std::unordered_map<size_t, int> &table1 = global_partition->GlobalRecordTableOut;
 
@@ -1263,7 +1382,8 @@ void Block::fetchClassByBorderBFSIn(ptree::Graph &eqGraph, ptree::Graph &graph) 
     vector<int> que(size, 0);
     vector<int> visited(size, 0);
     vector<vector<int>> buffer(size);
-
+    int addNum = 0;
+    int addEdge = 0;
     int lo = 0;
     int hi = 0;
     for (auto border_node : this->borderIn) {
@@ -1310,6 +1430,12 @@ void Block::fetchClassByBorderBFSIn(ptree::Graph &eqGraph, ptree::Graph &graph) 
             buffer[node].push_back(global_partition->SingleNode2EqGraphNode[gid]);
         }
 
+        
+        
+        
+        
+
+        
         auto gid = localGraph[node].gid;
         auto res = graph[gid].bits;
         auto hash_res = hash_vector(res);
@@ -1317,12 +1443,15 @@ void Block::fetchClassByBorderBFSIn(ptree::Graph &eqGraph, ptree::Graph &graph) 
         if (table2.find(hash_res) == table2.end()) {
             int idx = eqGraph.num_vertices();
             eqGraph.addVertex(idx);
+            addNum++;
             for (auto &kid : buffer[node]) {
                 int dst = kid;
                 eqGraph.addEdge(dst, idx);
+                addEdge++;
             }
             table2[hash_res] = idx;
         }
+        
         localGraph[node].borderInIdx = table2[hash_res];
 
         
@@ -1343,15 +1472,197 @@ void Block::fetchClassByBorderBFSIn(ptree::Graph &eqGraph, ptree::Graph &graph) 
         }
         vector<uint64_t>().swap(graph[gid].bits);
     }
-    LOG("blk = {}, after compact, table size = {}", this->blockID, table2.size());
+    LOG("blk = {}, after compact, table size = {}, addNum = {}, addEdge = {}", this->blockID, table2.size(), addNum,
+        addEdge);
 }
 
-void Block::fetchClassByBorderBFSOut(ptree::Graph &eqGraph, ptree::Graph &graph) {
+int Block::fetchClassByBorderBFSIn4PreCompute(ptree::Graph &eqGraph, ptree::Graph &graph) {
+    
+    std::unordered_map<size_t, int> &table2 = global_partition->GlobalRecordTableIn;
+    std::unordered_map<size_t, int> &table1 = global_partition->GlobalRecordTableOut;
+    int addRes = 0;
+    int size = localGraph.num_vertices();
+    
+    vector<int> border_degree(size, 0);
+    vector<int> que(size, 0);
+    vector<int> visited(size, 0);
+
+    int lo = 0;
+    int hi = 0;
+    for (auto border_node : this->borderIn) {
+        auto gid = localGraph[border_node].gid;
+        graph[gid].bits = vector<uint64_t>(this->global_partition->bitElemNumber, 0);
+        setBitAtPosition(graph[gid].bits, graph[gid].global_order);
+        que[hi++] = border_node;
+        visited[border_node] = -1;
+    }
+
+    while (lo < hi) {
+        auto node = que[lo++];
+        for (auto inEdge : localGraph.out_edges(node)) {
+            border_degree[inEdge]++;
+            if (visited[inEdge] != -1) {
+                visited[inEdge] = -1;
+                que[hi++] = inEdge;
+            }
+        }
+    }
+
+    lo = 0;
+    hi = 0;
+    for (auto border_node : this->borderIn) {
+        if (border_degree[border_node] == 0) {
+            que[hi++] = border_node;
+        }
+    }
+    while (lo < hi) {
+        auto node = que[lo++];
+        
+        auto gid = localGraph[node].gid;
+        auto res = graph[gid].bits;
+        auto hash_res = hash_vector(res);
+
+        if (table2.find(hash_res) == table2.end()) {
+            addRes++;
+            table2[hash_res] = -1;
+        }
+        
+        for (auto outEdge : localGraph.out_edges(node)) {
+            border_degree[outEdge]--;
+            if (border_degree[outEdge] == 0) {
+                que[hi++] = outEdge;
+            }
+            auto parent_gid = localGraph[outEdge].gid;
+            if (graph[parent_gid].bits.empty()) {
+                graph[parent_gid].bits = res;
+            }
+            for (int i = 0; i < res.size(); i++) {
+                graph[parent_gid].bits[i] |= res[i];
+            }
+        }
+        vector<uint64_t>().swap(graph[gid].bits);
+    }
+    
+    return addRes;
+}
+
+void Block::fetchClassByBorderBFSInNoEq(ptree::Graph &eqGraph, ptree::Graph &graph) {
+    
+    std::unordered_map<size_t, int> &table2 = global_partition->GlobalRecordTableIn;
+    std::unordered_map<size_t, int> &table1 = global_partition->GlobalRecordTableOut;
+
+    int size = localGraph.num_vertices();
+    LOG("fetchClassByBorderBFS, total node = {}, blk = {}", size, this->blockID);
+    vector<int> border_degree(size, 0);
+    vector<int> que(size, 0);
+    vector<int> visited(size, 0);
+    vector<vector<int>> buffer(size);
+    int addNum = 0;
+    int addEdge = 0;
+    int lo = 0;
+    int hi = 0;
+    for (auto border_node : this->borderIn) {
+        auto gid = localGraph[border_node].gid;
+        graph[gid].bits = vector<uint64_t>(this->global_partition->bitElemNumber, 0);
+        setBitAtPosition(graph[gid].bits, graph[gid].global_order);
+        que[hi++] = border_node;
+        visited[border_node] = -1;
+    }
+    while (lo < hi) {
+        auto node = que[lo++];
+        for (auto inEdge : localGraph.out_edges(node)) {
+            border_degree[inEdge]++;
+            if (visited[inEdge] != -1) {
+                visited[inEdge] = -1;
+                que[hi++] = inEdge;
+            }
+        }
+    }
+    if (not this->borderIn.empty()) {
+        for (int i = 0; i < size; i++) {
+            if (border_degree[i] > 0) {
+                buffer[i].reserve(border_degree[i]);
+            }
+        }
+    }
+
+    lo = 0;
+    hi = 0;
+    for (auto border_node : this->borderIn) {
+        if (border_degree[border_node] == 0) {
+            que[hi++] = border_node;
+        }
+    }
+
+    while (lo < hi) {
+        auto node = que[lo++];
+        
+        std::vector<std::vector<int>> allCandidate;
+        allCandidate.reserve(1 + border_degree[node]);
+
+        if (localGraph[node].border_in) {
+            auto gid = localGraph[node].gid;
+            buffer[node].push_back(global_partition->SingleNode2EqGraphNode[gid]);
+        }
+
+        
+        auto gid = localGraph[node].gid;
+        auto res = graph[gid].bits;
+        auto hash_res = hash_vector(res);
+
+        if (table2.find(hash_res) == table2.end()) {
+            int idx = eqGraph.num_vertices();
+            eqGraph.addVertex(idx);
+            eqGraph[idx].bits = graph[gid].bits;
+            addNum++;
+
+            std::vector<int> collections;
+            for (auto &kid : buffer[node]) {
+                auto &kidsBits = eqGraph[kid].bits;
+                getBitPositions(kidsBits, collections);
+
+                
+                
+                
+            }
+            for (auto src : collections) {
+                eqGraph.addEdge(src, idx);
+            }
+            table2[hash_res] = idx;
+        }
+        
+        localGraph[node].borderInIdx = table2[hash_res];
+
+        
+        for (auto outEdge : localGraph.out_edges(node)) {
+            border_degree[outEdge]--;
+            buffer[outEdge].push_back(table2[hash_res]);
+
+            if (border_degree[outEdge] == 0) {
+                que[hi++] = outEdge;
+            }
+            auto parent_gid = localGraph[outEdge].gid;
+            if (graph[parent_gid].bits.empty()) {
+                graph[parent_gid].bits = res;
+            }
+            for (int i = 0; i < res.size(); i++) {
+                graph[parent_gid].bits[i] |= res[i];
+            }
+        }
+        vector<uint64_t>().swap(graph[gid].bits);
+    }
+    LOG("blk = {}, after compact, table size = {}, addNum = {}, addEdge = {}", this->blockID, table2.size(), addNum,
+        addEdge);
+}
+
+void Block::fetchClassByBorderBFSOutNoEq(ptree::Graph &eqGraph, ptree::Graph &graph) {
     std::unordered_map<size_t, int> &table = global_partition->GlobalRecordTableOut;
     std::unordered_map<size_t, int> &table2 = global_partition->GlobalRecordTableIn;
 
     int size = localGraph.num_vertices();
-    LOG("fetchClassByBorderBFS, total node = {}", size);
+    LOG("fetchClassByBorderBFS, total node = {}, block id = {}", size, this->blockID);
+    int addNum = 0;
+    int addEdge = 0;
     vector<int> border_degree(size, 0);
     vector<int> que(size, 0);
     vector<int> visited(size, 0);
@@ -1364,7 +1675,10 @@ void Block::fetchClassByBorderBFSOut(ptree::Graph &eqGraph, ptree::Graph &graph)
             continue;
         }
         que[hi++] = border_node;
+        
     }
+    
+    
     while (lo < hi) {
         auto node = que[lo++];
         for (auto inEdge : localGraph.in_edges(node)) {
@@ -1383,6 +1697,8 @@ void Block::fetchClassByBorderBFSOut(ptree::Graph &eqGraph, ptree::Graph &graph)
         }
     }
 
+    
+    
     lo = 0;
     hi = 0;
     for (auto border_node : this->borderOut) {
@@ -1393,27 +1709,142 @@ void Block::fetchClassByBorderBFSOut(ptree::Graph &eqGraph, ptree::Graph &graph)
 
     while (lo < hi) {
         auto node = que[lo++];
-        std::vector<std::vector<int>> allCandidate;
-        allCandidate.reserve(1 + border_degree[node]);
+        
         auto gid = localGraph[node].gid;
         if (localGraph[node].border_out) {
-            if (graph[gid].bits.empty()){
+            if (graph[gid].bits.empty()) {
                 graph[gid].bits = vector<uint64_t>(this->global_partition->bitElemNumber, 0);
             }
             setBitAtPosition(graph[gid].bits, graph[gid].global_order);
             buffer[node].push_back(global_partition->SingleNode2EqGraphNode[localGraph[node].gid]);
         }
-       
+        
+
+        
         auto &res = graph[gid].bits;
         auto hash_res = hash_vector(res);
-
         if (table.find(hash_res) == table.end()) {
-           
+            
+            
             int idx = eqGraph.num_vertices();
             eqGraph.addVertex(idx);
-            global_partition->GlobalSout.insert({idx, idx});
+            eqGraph[idx].bits = graph[gid].bits;
+            addNum++;
+
+            
+            
+            std::vector<int> collections;
             for (auto &kid : buffer[node]) {
+                auto &kidsBits = eqGraph[kid].bits;
+                getBitPositions(kidsBits, collections);
+            }
+
+            for (auto dst : collections) {
+                eqGraph.addEdge(idx, dst);
+            }
+
+            table[hash_res] = idx;
+        }
+        auto nodeNumber = table[hash_res];  
+        localGraph[node].borderOutIdx = nodeNumber;
+
+        
+        for (auto inEdge : localGraph.in_edges(node)) {
+            border_degree[inEdge]--;
+            buffer[inEdge].push_back(nodeNumber);
+
+            if (border_degree[inEdge] == 0) {
+                que[hi++] = inEdge;
+            }
+            auto parent_gid = localGraph[inEdge].gid;
+            if (graph[parent_gid].bits.size() == 0) {
+                graph[parent_gid].bits = res;
+            }
+            for (int i = 0; i < res.size(); i++) {
+                graph[parent_gid].bits[i] |= res[i];
+            }
+        }
+
+        vector<uint64_t>().swap(graph[gid].bits);
+    }
+    LOG("blk = {} ,after compact,  table size = {}, addNum = {}, addEdge = {}", this->blockID, table.size(), addNum,
+        addEdge);
+}
+
+void Block::fetchClassByBorderBFSOut(ptree::Graph &eqGraph, ptree::Graph &graph) {
+    std::unordered_map<size_t, int> &table = global_partition->GlobalRecordTableOut;
+    std::unordered_map<size_t, int> &table2 = global_partition->GlobalRecordTableIn;
+
+    int size = localGraph.num_vertices();
+    LOG("fetchClassByBorderBFS, total node = {}, block id = {}", size, this->blockID);
+    int addNum = 0;
+    int addEdge = 0;
+    vector<int> border_degree(size, 0);
+    vector<int> que(size, 0);
+    vector<int> visited(size, 0);
+    vector<vector<int>> buffer(size);
+
+    int lo = 0;
+    int hi = 0;
+    for (auto border_node : this->borderOut) {
+        if (localGraph.out_degree(border_node) != 0) {
+            continue;
+        }
+        que[hi++] = border_node;
+        
+    }
+    
+    
+    while (lo < hi) {
+        auto node = que[lo++];
+        for (auto inEdge : localGraph.in_edges(node)) {
+            border_degree[inEdge]++;
+            if (visited[inEdge] != 1) {
+                visited[inEdge] = 1;
+                que[hi++] = inEdge;
+            }
+        }
+    }
+    if (not this->borderOut.empty()) {
+        for (int i = 0; i < size; i++) {
+            if (border_degree[i] > 0) {
+                buffer[i].reserve(1 + border_degree[i]);
+            }
+        }
+    }
+
+    
+    
+    lo = 0;
+    hi = 0;
+    for (auto border_node : this->borderOut) {
+        if (border_degree[border_node] == 0) {
+            que[hi++] = border_node;
+        }
+    }
+
+    while (lo < hi) {
+        auto node = que[lo++];
+        
+        auto gid = localGraph[node].gid;
+        if (localGraph[node].border_out) {
+            if (graph[gid].bits.empty()) {
+                graph[gid].bits = vector<uint64_t>(this->global_partition->bitElemNumber, 0);
+            }
+            setBitAtPosition(graph[gid].bits, graph[gid].global_order);
+            buffer[node].push_back(global_partition->SingleNode2EqGraphNode[localGraph[node].gid]);
+        }
+        
+
+        auto &res = graph[gid].bits;
+        auto hash_res = hash_vector(res);
+        if (table.find(hash_res) == table.end()) {
+            int idx = eqGraph.num_vertices();
+            eqGraph.addVertex(idx);
+            addNum++;
+            for (auto &kid : buffer[node]) {                
                 int dst = kid;
+                addEdge++;
                 eqGraph.addEdge(idx, dst);
             }
             table[hash_res] = idx;
@@ -1439,11 +1870,102 @@ void Block::fetchClassByBorderBFSOut(ptree::Graph &eqGraph, ptree::Graph &graph)
 
         vector<uint64_t>().swap(graph[gid].bits);
     }
-    LOG("blk = {} ,after compact,  table size = {}", this->blockID, table.size());
-    return;
+    LOG("blk = {} ,after compact,  table size = {}, addNum = {}, addEdge = {}", this->blockID, table.size(), addNum,
+        addEdge);
+}
+
+int Block::fetchClassByBorderBFSOut4PreCompute(ptree::Graph &eqGraph, ptree::Graph &graph) {
+    std::unordered_map<size_t, int> &table = global_partition->GlobalRecordTableOut;
+    std::unordered_map<size_t, int> &table2 = global_partition->GlobalRecordTableIn;
+    int addRes = 0;
+
+    int size = localGraph.num_vertices();
+    
+    vector<int> border_degree(size, 0);
+    vector<int> que(size, 0);
+    vector<int> visited(size, 0);
+
+    int lo = 0;
+    int hi = 0;
+    for (auto border_node : this->borderOut) {
+        if (localGraph.out_degree(border_node) != 0) {
+            continue;
+        }
+        que[hi++] = border_node;
+        
+    }
+    
+    
+    while (lo < hi) {
+        auto node = que[lo++];
+        for (auto inEdge : localGraph.in_edges(node)) {
+            border_degree[inEdge]++;
+            if (visited[inEdge] != 1) {
+                visited[inEdge] = 1;
+                que[hi++] = inEdge;
+            }
+        }
+    }
+
+    
+    
+    lo = 0;
+    hi = 0;
+    for (auto border_node : this->borderOut) {
+        if (border_degree[border_node] == 0) {
+            que[hi++] = border_node;
+        }
+    }
+
+    while (lo < hi) {
+        auto node = que[lo++];
+        
+        std::vector<std::vector<int>> allCandidate;
+        allCandidate.reserve(1 + border_degree[node]);
+        auto gid = localGraph[node].gid;
+        if (localGraph[node].border_out) {
+            if (graph[gid].bits.empty()) {
+                graph[gid].bits = vector<uint64_t>(this->global_partition->bitElemNumber, 0);
+            }
+            setBitAtPosition(graph[gid].bits, graph[gid].global_order);
+        }
+        
+
+        auto &res = graph[gid].bits;
+        auto hash_res = hash_vector(res);
+
+        if (table.find(hash_res) == table.end()) {
+            
+            
+            addRes++;
+            table[hash_res] = 1;
+        }
+        localGraph[node].borderOutIdx = table[hash_res];
+
+        
+        for (auto inEdge : localGraph.in_edges(node)) {
+            border_degree[inEdge]--;
+
+            if (border_degree[inEdge] == 0) {
+                que[hi++] = inEdge;
+            }
+            auto parent_gid = localGraph[inEdge].gid;
+            if (graph[parent_gid].bits.size() == 0) {
+                graph[parent_gid].bits = res;
+            }
+            for (int i = 0; i < res.size(); i++) {
+                graph[parent_gid].bits[i] |= res[i];
+            }
+        }
+
+        vector<uint64_t>().swap(graph[gid].bits);
+    }
+    
+    return addRes;
 }
 
 void Block::fetchClassByBorderBFS(std::unordered_map<int, int> &borderGlobal2Local) {
+    
     std::unordered_map<size_t, int> table;
     int size = localGraph.num_vertices();
     LOG("fetchClassByBorderBFS, total node = {}", size);
@@ -1460,7 +1982,10 @@ void Block::fetchClassByBorderBFS(std::unordered_map<int, int> &borderGlobal2Loc
             continue;
         }
         que[hi++] = border_node;
+        
     }
+    
+    
     while (lo < hi) {
         auto node = que[lo++];
         for (auto inEdge : localGraph.in_edges(node)) {

@@ -12,22 +12,19 @@
 
 // static void usage() {
 //     cout << "\nUsage:\n"
-//             "	pathtree [-h] [-n num_query] [-t alg_type]  [-c chainfile] [-r "
-//             "resultfile] filename\n"
-//             "Description:\n"
-//             "	-h	Print the help message.\n"
-//             "	-p	Post-processing (Data Compression).\n"
-//             "	-n	Set the total number of random queries. The default "
-//             "value is 100,000.\n"
-//             "	-c	Set the input chain(path) file.\n"
-//             "	-r	Set the result filename ('../results.txt' is default "
-//             "file).\n"
-//             "	-t	Algorithm type(PTree-1 is default algorithm).\n"
-//             "		1:	PTree-1\n"
-//             "		2:	PTree-2 (chain decomposition).\n"
-//             "		3:	PTree-2 (path decomposition).\n"
-//             "		4:	PTree-2 .\n"
-//             "	-d	debug mode (test reachability).\n"
+//             "	pathtree [-h] [-n num_query] [-t alg_type]  [-c
+//             chainfile]
+//             [-r " "resultfile] filename\n" "Description:\n" "	-h
+//             Print the help message.\n" "	-p	Post-processing (Data
+//             Compression).\n" "	-n	Set the total number of random
+//             queries. The default " "value is 100,000.\n" "	-c	Set the
+//             input chain(path) file.\n" "	-r	Set the result filename
+//             ('../results.txt' is default " "file).\n" "	-t
+//             Algorithm type(PTree-1 is default algorithm).\n" "
+//             1:	PTree-1\n" "		2:	PTree-2 (chain
+//             decomposition).\n" "		3:	PTree-2 (path
+//             decomposition).\n" "		4:	PTree-2 .\n" "	-d
+//             debug mode (test reachability).\n"
 //             "	filename	The graph file.\n"
 //          << endl;
 // }
@@ -115,9 +112,9 @@
 //     //	DWGraphUtil::processBranch(g, branch);
 //     //	DWGraphUtil::findMaxBranching(g, branch);
 //     bool res = DWGraphUtil::checkBranching(g, branch);
-//     cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++" << endl;
-//     branch.printGraph();
-//     if (!res) cerr << "\nSome errors found!" << endl;
+//     cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++" <<
+//     endl; branch.printGraph(); if (!res) cerr << "\nSome errors found!" <<
+//     endl;
 // }
 // #else
 // int main(int argc, char* argv[]) {
@@ -213,7 +210,8 @@
 //         GraphUtil::mergeSCC(g, sccmap, reverse_topo_sort);
 //         gettimeofday(&after_time, NULL);
 //         query_time = (after_time.tv_sec - before_time.tv_sec) * 1000.0 +
-//                      (after_time.tv_usec - before_time.tv_usec) * 1.0 / 1000.0;
+//                      (after_time.tv_usec - before_time.tv_usec) * 1.0 /
+//                      1000.0;
 //         cout << "merging time:" << query_time << " (ms)" << endl;
 //     } else {
 //         GraphUtil::topological_sort(g, reverse_topo_sort);
@@ -263,7 +261,8 @@
 //     pt.createLabels(alg_type, cfile, compress);
 //     gettimeofday(&after_time, NULL);
 //     labeling_time = (after_time.tv_sec - before_time.tv_sec) * 1000.0 +
-//                     (after_time.tv_usec - before_time.tv_usec) * 1.0 / 1000.0;
+//                     (after_time.tv_usec - before_time.tv_usec) * 1.0 /
+//                     1000.0;
 //     cout << "#construction time:" << labeling_time << " (ms)" << endl;
 
 //     // process queries
@@ -326,10 +325,12 @@
 //             keepResult(resfilename, "PTree-1", filename, labeling_time,
 //                        query_time, ind_size[1], comp_ratio);
 //         else if (alg_type == 2)
-//             keepResult(resfilename, "PTree-2(chain)", filename, labeling_time,
+//             keepResult(resfilename, "PTree-2(chain)", filename,
+//             labeling_time,
 //                        query_time, ind_size[1], comp_ratio);
 //         else if (alg_type == 3)
-//             keepResult(resfilename, "PTree-2(path)", filename, labeling_time,
+//             keepResult(resfilename, "PTree-2(path)", filename,
+//             labeling_time,
 //                        query_time, ind_size[1], comp_ratio);
 //         else
 //             keepResult(resfilename, "PTree-2", filename, labeling_time,
@@ -339,10 +340,12 @@
 //             keepResult(resfilename, "PTree-1C", filename, labeling_time,
 //                        query_time, ind_size[1], comp_ratio);
 //         else if (alg_type == 2)
-//             keepResult(resfilename, "PTree-2C(chain)", filename, labeling_time,
+//             keepResult(resfilename, "PTree-2C(chain)", filename,
+//             labeling_time,
 //                        query_time, ind_size[1], comp_ratio);
 //         else if (alg_type == 3)
-//             keepResult(resfilename, "PTree-2C(path)", filename, labeling_time,
+//             keepResult(resfilename, "PTree-2C(path)", filename,
+//             labeling_time,
 //                        query_time, ind_size[1], comp_ratio);
 //         else
 //             keepResult(resfilename, "PTree-2C", filename, labeling_time,

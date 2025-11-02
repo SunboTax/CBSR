@@ -2,8 +2,10 @@
 namespace ptree {
 // implement tarjan's algorithm to find Strongly Connected Component from a
 // given start node
-void DWGraphUtil::tarjan(DWGraph &g, int vid, int &index, map<int, pair<int, int> > &order, vector<int> &sn,
-                         map<int, vector<int> > &sccmap, int &scc) {
+void DWGraphUtil::tarjan(DWGraph& g, int vid, int& index,
+    map<int, pair<int, int>>& order, vector<int>& sn,
+    map<int, vector<int>>& sccmap, int& scc)
+{
     order[vid].first = index;
     order[vid].second = index;
     index++;
@@ -14,9 +16,11 @@ void DWGraphUtil::tarjan(DWGraph &g, int vid, int &index, map<int, pair<int, int
     for (eit = el.begin(); eit != el.end(); eit++) {
         if (!g.vl[g.target(*eit)].visited) {
             tarjan(g, g.target(*eit), index, order, sn, sccmap, scc);
-            order[vid].second = min(order[g.target(*eit)].second, order[vid].second);
+            order[vid].second
+                = min(order[g.target(*eit)].second, order[vid].second);
         } else if (find(sn.begin(), sn.end(), g.target(*eit)) != sn.end()) {
-            order[vid].second = min(order[g.target(*eit)].first, order[vid].second);
+            order[vid].second
+                = min(order[g.target(*eit)].first, order[vid].second);
         }
     }
 
@@ -38,7 +42,8 @@ void DWGraphUtil::tarjan(DWGraph &g, int vid, int &index, map<int, pair<int, int
     }
 }
 
-void DWGraphUtil::findMaxBranching1(DWGraph &g, DWGraph &maxBranch) {
+void DWGraphUtil::findMaxBranching1(DWGraph& g, DWGraph& maxBranch)
+{
     DWVertexList::iterator vlit;
     DWVertexList vl = g.vertices();
     DWEdgeList el;
@@ -80,22 +85,24 @@ void DWGraphUtil::findMaxBranching1(DWGraph &g, DWGraph &maxBranch) {
     vector<int> sn;
     vector<int>::iterator vit;
     vector<int>::reverse_iterator rvit;
-    map<int, pair<int, int> > order;
-    map<int, vector<int> > sccmap;
+    map<int, pair<int, int>> order;
+    map<int, vector<int>> sccmap;
     int scc_num = 0;
     int vid;
     vl = maxBranch.vertices();
     for (vlit = vl.begin(); vlit != vl.end(); vlit++) {
         vid = vlit->first;
-        if (maxBranch.vl[vid].visited) continue;
+        if (maxBranch.vl[vid].visited)
+            continue;
         tarjan(maxBranch, vid, index, order, sn, sccmap, scc_num);
     }
 
     //	cout << "scc_num = " << scc_num;
 
-    if (scc_num == maxBranch.num_vertices()) return;
+    if (scc_num == maxBranch.num_vertices())
+        return;
 
-    map<int, vector<int> >::iterator mit = sccmap.begin();
+    map<int, vector<int>>::iterator mit = sccmap.begin();
     int num_comp;
     for (mit = sccmap.begin(); mit != sccmap.end(); mit++) {
         num_comp = mit->first;
@@ -103,7 +110,8 @@ void DWGraphUtil::findMaxBranching1(DWGraph &g, DWGraph &maxBranch) {
         //	cout << "scc " << num_comp << " size=" << mit->second.size() <<
         // endl;
 
-        if (mit->second.size() == 1) continue;
+        if (mit->second.size() == 1)
+            continue;
 
         vector<int> sccvec = mit->second;
         // find min weight edge in sccvec
@@ -134,7 +142,8 @@ void DWGraphUtil::findMaxBranching1(DWGraph &g, DWGraph &maxBranch) {
  *
  */
 // Edmonds' Branching Algorithm
-void DWGraphUtil::findMaxBranching(DWGraph &g, DWGraph &maxBranch) {
+void DWGraphUtil::findMaxBranching(DWGraph& g, DWGraph& maxBranch)
+{
     DWVertexList::iterator vlit;
     DWVertexList vl = g.vertices();
     DWEdgeList el;
@@ -182,29 +191,31 @@ void DWGraphUtil::findMaxBranching(DWGraph &g, DWGraph &maxBranch) {
     vector<int> sn;
     vector<int>::iterator vit;
     vector<int>::reverse_iterator rvit;
-    map<int, pair<int, int> > order;
-    map<int, vector<int> > sccmap;
+    map<int, pair<int, int>> order;
+    map<int, vector<int>> sccmap;
     int scc_num = 0;
     int vid;
     vl = maxBranch.vertices();
     for (vlit = vl.begin(); vlit != vl.end(); vlit++) {
         vid = vlit->first;
-        if (maxBranch.vl[vid].visited) continue;
+        if (maxBranch.vl[vid].visited)
+            continue;
         tarjan(maxBranch, vid, index, order, sn, sccmap, scc_num);
     }
 
-    if (scc_num == maxBranch.num_vertices()) return;
+    if (scc_num == maxBranch.num_vertices())
+        return;
 
     DWGraph ng = g;
 
-    map<int, vector<int> >::iterator mit = sccmap.begin();
+    map<int, vector<int>>::iterator mit = sccmap.begin();
     int num_comp;
     int maxid = ng.maxid();
     EdgeMap edgemap;
-    map<int, vector<int> > newVertex;
+    map<int, vector<int>> newVertex;
     map<int, int> minWeight;
-    map<int, DWVertexProp> sccPropMap;  // keep edge info in strongly connceted
-                                        // component, <src, trgEdgeProp>
+    map<int, DWVertexProp> sccPropMap; // keep edge info in strongly connceted
+                                       // component, <src, trgEdgeProp>
     DWEdgeList inedge, outedge;
 
     for (mit = sccmap.begin(); mit != sccmap.end(); mit++) {
@@ -213,7 +224,8 @@ void DWGraphUtil::findMaxBranching(DWGraph &g, DWGraph &maxBranch) {
         cout << "scc " << num_comp << " size=" << mit->second.size() << endl;
 #endif
 
-        if (mit->second.size() == 1) continue;
+        if (mit->second.size() == 1)
+            continue;
 
             // for test
 #ifdef DEBUG
@@ -264,7 +276,8 @@ void DWGraphUtil::findMaxBranching(DWGraph &g, DWGraph &maxBranch) {
                 prop.edgeid = edgeid;
                 sccPropMap.insert(make_pair(*rvit, prop));
             }
-            if (weight < minw) minw = weight;
+            if (weight < minw)
+                minw = weight;
         }
         minWeight[maxid] = minw;
 
@@ -282,7 +295,8 @@ void DWGraphUtil::findMaxBranching(DWGraph &g, DWGraph &maxBranch) {
                 //	if (find(sccvec.begin(), sccvec.end(),
                 // g.target(*eit))
                 //!= sccvec.end()) {
-                if (find(sccvec.begin(), sccvec.end(), ng.target(*eit)) != sccvec.end()) {
+                if (find(sccvec.begin(), sccvec.end(), ng.target(*eit))
+                    != sccvec.end()) {
                     // Dec 15
                     // remove edges among scc
                     ng.removeEdge(*eit);
@@ -302,7 +316,8 @@ void DWGraphUtil::findMaxBranching(DWGraph &g, DWGraph &maxBranch) {
                 //	newnode.weight = g.weight(*eit);
                 newnode.weight = ng.weight(*eit);
                 newnode.edgeid = *eit;
-                edgemap.insert(make_pair(make_pair(maxid, newnode), make_pair(*vit, newnode)));
+                edgemap.insert(make_pair(make_pair(maxid, newnode),
+                    make_pair(*vit, newnode)));
             }
 
             // for test
@@ -323,7 +338,8 @@ void DWGraphUtil::findMaxBranching(DWGraph &g, DWGraph &maxBranch) {
                 //	if (find(sccvec.begin(), sccvec.end(),
                 // g.source(*eit))
                 //!= sccvec.end()) {
-                if (find(sccvec.begin(), sccvec.end(), ng.source(*eit)) != sccvec.end()) {
+                if (find(sccvec.begin(), sccvec.end(), ng.source(*eit))
+                    != sccvec.end()) {
                     // Dec 15
                     // remove edges among scc
                     ng.removeEdge(*eit);
@@ -359,7 +375,8 @@ void DWGraphUtil::findMaxBranching(DWGraph &g, DWGraph &maxBranch) {
                 // change g.source(*eit) to ng.source(*eit)
                 //	edgemap.insert(make_pair(make_pair(g.source(*eit),
                 // src),make_pair(g.source(*eit), trg)));
-                edgemap.insert(make_pair(make_pair(ng.source(*eit), src), make_pair(ng.source(*eit), trg)));
+                edgemap.insert(make_pair(make_pair(ng.source(*eit), src),
+                    make_pair(ng.source(*eit), trg)));
 
                 // Dec 15
                 // change ng.target(*eit) to ng.source(*eit); change the
@@ -428,7 +445,8 @@ void DWGraphUtil::findMaxBranching(DWGraph &g, DWGraph &maxBranch) {
                 DWVertexProp dwep = sccPropMap[*rvit1];
                 // for test
 #ifdef DEBUG
-                cout << "edge " << *rvit1 << "->" << dwep.id << " edgeid " << dwep.edgeid << endl;
+                cout << "edge " << *rvit1 << "->" << dwep.id << " edgeid "
+                     << dwep.edgeid << endl;
 #endif
 
                 if (dwep.weight == minWeight[*rvit2] && !keep) {
@@ -438,7 +456,8 @@ void DWGraphUtil::findMaxBranching(DWGraph &g, DWGraph &maxBranch) {
 
                 // for test
 #ifdef DEBUG
-                cout << "in add edge " << *rvit1 << "->" << dwep.id << " eid " << dwep.edgeid << endl;
+                cout << "in add edge " << *rvit1 << "->" << dwep.id << " eid "
+                     << dwep.edgeid << endl;
 #endif
                 maxBranch.addEdge(*rvit1, dwep.id, dwep.weight, dwep.edgeid);
             }
@@ -446,14 +465,16 @@ void DWGraphUtil::findMaxBranching(DWGraph &g, DWGraph &maxBranch) {
             el = maxBranch.in_edges(*rvit2);
             // for test
 #ifdef DEBUG
-            cout << "search edge " << maxBranch.source(el.front()) << "->" << *rvit2 << endl;
+            cout << "search edge " << maxBranch.source(el.front()) << "->"
+                 << *rvit2 << endl;
 #endif
 
             // Dec 15
             // change g.target to maxBranch.source
             //	DWVertexProp dwep2 = maxBranch.edge(g.target(*(el.begin())),
             //*rvit2); 	Edge edge = make_pair(g.target(*(el.begin())), dwep2);
-            DWVertexProp dwep2 = maxBranch.edge(maxBranch.source(el.front()), *rvit2);
+            DWVertexProp dwep2
+                = maxBranch.edge(maxBranch.source(el.front()), *rvit2);
             Edge edge = make_pair(maxBranch.source(el.front()), dwep2);
             EdgeMap::iterator newedge = edgemap.find(edge);
 
@@ -463,11 +484,12 @@ void DWGraphUtil::findMaxBranching(DWGraph &g, DWGraph &maxBranch) {
                 EdgeMap::iterator iter;
                 cout << "edgemap list: " << endl;
                 for (iter = edgemap.begin(); iter != edgemap.end(); iter++)
-                    cout << iter->first.first << "->" << iter->first.second.id << " eid " << iter->first.second.edgeid
-                         << " mapping " << iter->second.first << "->" << iter->second.second.id << " eid "
-                         << iter->second.second.edgeid << endl;
-                cout << "in search edge " << edge.first << "->" << edge.second.id << " eid " << edge.second.edgeid
-                     << endl;
+                    cout << iter->first.first << "->" << iter->first.second.id
+                         << " eid " << iter->first.second.edgeid << " mapping "
+                         << iter->second.first << "->" << iter->second.second.id
+                         << " eid " << iter->second.second.edgeid << endl;
+                cout << "in search edge " << edge.first << "->" << edge.second.id
+                     << " eid " << edge.second.edgeid << endl;
                 exit(0);
             }
 #endif
@@ -481,7 +503,8 @@ void DWGraphUtil::findMaxBranching(DWGraph &g, DWGraph &maxBranch) {
 
                 // for test
 #ifdef DEBUG
-                cout << "process edge " << *rvit1 << "->" << dwep.id << " eid " << dwep.edgeid << endl;
+                cout << "process edge " << *rvit1 << "->" << dwep.id << " eid "
+                     << dwep.edgeid << endl;
 #endif
                 if (dwep.id == dwep1.id && !keep) {
                     keep = true;
@@ -489,7 +512,8 @@ void DWGraphUtil::findMaxBranching(DWGraph &g, DWGraph &maxBranch) {
                 }
                 // for test
 #ifdef DEBUG
-                cout << "add edge " << *rvit1 << "->" << dwep.id << " eid " << dwep.edgeid << endl;
+                cout << "add edge " << *rvit1 << "->" << dwep.id << " eid "
+                     << dwep.edgeid << endl;
 #endif
                 maxBranch.addEdge(*rvit1, dwep.id, dwep.weight, dwep.edgeid);
             }
@@ -514,10 +538,13 @@ void DWGraphUtil::findMaxBranching(DWGraph &g, DWGraph &maxBranch) {
                     EdgeMap::iterator iter;
                     cout << "edgemap list: " << endl;
                     for (iter = edgemap.begin(); iter != edgemap.end(); iter++)
-                        cout << iter->first.first << "->" << iter->first.second.id << " eid "
-                             << iter->first.second.edgeid << " mapping " << iter->second.first << "->"
-                             << iter->second.second.id << " eid " << iter->second.second.edgeid << endl;
-                    cout << "search edge " << edge.first << "->" << edge.second.id << " eid " << edge.second.edgeid
+                        cout << iter->first.first << "->" << iter->first.second.id
+                             << " eid " << iter->first.second.edgeid << " mapping "
+                             << iter->second.first << "->"
+                             << iter->second.second.id << " eid "
+                             << iter->second.second.edgeid << endl;
+                    cout << "search edge " << edge.first << "->"
+                         << edge.second.id << " eid " << edge.second.edgeid
                          << endl;
                     exit(0);
                 }
@@ -529,7 +556,8 @@ void DWGraphUtil::findMaxBranching(DWGraph &g, DWGraph &maxBranch) {
 
                 // for test
 #ifdef DEBUG
-                cout << "add out edge " << src << "->" << dwep1.id << " eid " << dwep1.edgeid << endl;
+                cout << "add out edge " << src << "->" << dwep1.id << " eid "
+                     << dwep1.edgeid << endl;
 #endif
             }
         }
@@ -555,7 +583,8 @@ void DWGraphUtil::findMaxBranching(DWGraph &g, DWGraph &maxBranch) {
 #endif
 }
 
-bool DWGraphUtil::checkBranching(DWGraph &graph, DWGraph &branch) {
+bool DWGraphUtil::checkBranching(DWGraph& graph, DWGraph& branch)
+{
     findMaxBranching(graph, branch);
     int gsize = graph.num_vertices();
     DWVertexList bvl = branch.vertices();
@@ -572,7 +601,8 @@ bool DWGraphUtil::checkBranching(DWGraph &graph, DWGraph &branch) {
             src = -1;
             trg = -1;
             weight = MAX_VAL;
-            for (eit = branch.in_edges(vlit->first).begin(); eit != branch.in_edges(vlit->first).end(); eit++) {
+            for (eit = branch.in_edges(vlit->first).begin();
+                 eit != branch.in_edges(vlit->first).end(); eit++) {
                 /*
                         if (branch.edgeOpMap[*eit].weight < weight) {
                                 src = branch.edgeOpMap[*eit].src;
@@ -580,8 +610,10 @@ bool DWGraphUtil::checkBranching(DWGraph &graph, DWGraph &branch) {
                                 weight = branch.edgeOpMap[*eit].weight;
                         }
                 */
-                if (graph.edgeOpMap.find(*eit) == graph.edgeOpMap.end() || graph.edgeOpMap[*eit].trg != vlit->first) {
-                    cout << "error: edge [" << branch.edgeOpMap[*eit].src << "-->>" << branch.edgeOpMap[*eit].trg
+                if (graph.edgeOpMap.find(*eit) == graph.edgeOpMap.end()
+                    || graph.edgeOpMap[*eit].trg != vlit->first) {
+                    cout << "error: edge [" << branch.edgeOpMap[*eit].src
+                         << "-->>" << branch.edgeOpMap[*eit].trg
                          << "] not existed!" << endl;
                     return false;
                 }
@@ -601,15 +633,17 @@ bool DWGraphUtil::checkBranching(DWGraph &graph, DWGraph &branch) {
     vector<int> sn;
     vector<int>::iterator vit;
     vector<int>::reverse_iterator rvit;
-    map<int, pair<int, int> > order;
-    map<int, vector<int> > sccmap;
+    map<int, pair<int, int>> order;
+    map<int, vector<int>> sccmap;
     int scc_num = 0;
     int vid;
     DWVertexList vl = branch.vertices();
-    for (vlit = vl.begin(); vlit != vl.end(); vlit++) branch.vl[vlit->first].visited = false;
+    for (vlit = vl.begin(); vlit != vl.end(); vlit++)
+        branch.vl[vlit->first].visited = false;
     for (vlit = vl.begin(); vlit != vl.end(); vlit++) {
         vid = vlit->first;
-        if (branch.vl[vid].visited) continue;
+        if (branch.vl[vid].visited)
+            continue;
         tarjan(branch, vid, index, order, sn, sccmap, scc_num);
     }
 
@@ -617,7 +651,7 @@ bool DWGraphUtil::checkBranching(DWGraph &graph, DWGraph &branch) {
     if (sccmap.size() != gsize) {
         cout << "scc_num = " << scc_num << endl;
         cout << "error: loop exists!" << endl;
-        map<int, vector<int> >::iterator mit = sccmap.begin();
+        map<int, vector<int>>::iterator mit = sccmap.begin();
         int num_comp;
         for (mit = sccmap.begin(); mit != sccmap.end(); mit++) {
             num_comp = mit->first;
@@ -625,9 +659,10 @@ bool DWGraphUtil::checkBranching(DWGraph &graph, DWGraph &branch) {
             //	cout << "scc " << num_comp << " size=" << mit->second.size() <<
             // endl;
 
-            if (mit->second.size() == 1) continue;
+            if (mit->second.size() == 1)
+                continue;
 
-            vector<int> &sccvec = mit->second;
+            vector<int>& sccvec = mit->second;
             //	branch.removeEdge(sccvec[1],sccvec[0]);
 
             cout << "loop " << num_comp << ": ";
@@ -641,7 +676,8 @@ bool DWGraphUtil::checkBranching(DWGraph &graph, DWGraph &branch) {
     return true;
 }
 
-bool DWGraphUtil::checkBranching1(DWGraph &graph, DWGraph &branch) {
+bool DWGraphUtil::checkBranching1(DWGraph& graph, DWGraph& branch)
+{
     findMaxBranching1(graph, branch);
     int gsize = graph.num_vertices();
     DWVertexList bvl = branch.vertices();
@@ -658,7 +694,8 @@ bool DWGraphUtil::checkBranching1(DWGraph &graph, DWGraph &branch) {
             src = -1;
             trg = -1;
             weight = MAX_VAL;
-            for (eit = branch.in_edges(vlit->first).begin(); eit != branch.in_edges(vlit->first).end(); eit++) {
+            for (eit = branch.in_edges(vlit->first).begin();
+                 eit != branch.in_edges(vlit->first).end(); eit++) {
                 /*
                         if (branch.edgeOpMap[*eit].weight < weight) {
                                 src = branch.edgeOpMap[*eit].src;
@@ -666,8 +703,10 @@ bool DWGraphUtil::checkBranching1(DWGraph &graph, DWGraph &branch) {
                                 weight = branch.edgeOpMap[*eit].weight;
                         }
                 */
-                if (graph.edgeOpMap.find(*eit) == graph.edgeOpMap.end() || graph.edgeOpMap[*eit].trg != vlit->first) {
-                    cout << "error: edge [" << branch.edgeOpMap[*eit].src << "-->>" << branch.edgeOpMap[*eit].trg
+                if (graph.edgeOpMap.find(*eit) == graph.edgeOpMap.end()
+                    || graph.edgeOpMap[*eit].trg != vlit->first) {
+                    cout << "error: edge [" << branch.edgeOpMap[*eit].src
+                         << "-->>" << branch.edgeOpMap[*eit].trg
                          << "] not existed!" << endl;
                     return false;
                 }
@@ -687,15 +726,17 @@ bool DWGraphUtil::checkBranching1(DWGraph &graph, DWGraph &branch) {
     vector<int> sn;
     vector<int>::iterator vit;
     vector<int>::reverse_iterator rvit;
-    map<int, pair<int, int> > order;
-    map<int, vector<int> > sccmap;
+    map<int, pair<int, int>> order;
+    map<int, vector<int>> sccmap;
     int scc_num = 0;
     int vid;
     DWVertexList vl = branch.vertices();
-    for (vlit = vl.begin(); vlit != vl.end(); vlit++) branch.vl[vlit->first].visited = false;
+    for (vlit = vl.begin(); vlit != vl.end(); vlit++)
+        branch.vl[vlit->first].visited = false;
     for (vlit = vl.begin(); vlit != vl.end(); vlit++) {
         vid = vlit->first;
-        if (branch.vl[vid].visited) continue;
+        if (branch.vl[vid].visited)
+            continue;
         tarjan(branch, vid, index, order, sn, sccmap, scc_num);
     }
 
@@ -703,7 +744,7 @@ bool DWGraphUtil::checkBranching1(DWGraph &graph, DWGraph &branch) {
     if (sccmap.size() != gsize) {
         cout << "scc_num = " << scc_num << endl;
         cout << "error: loop exists!" << endl;
-        map<int, vector<int> >::iterator mit = sccmap.begin();
+        map<int, vector<int>>::iterator mit = sccmap.begin();
         int num_comp;
         for (mit = sccmap.begin(); mit != sccmap.end(); mit++) {
             num_comp = mit->first;
@@ -711,9 +752,10 @@ bool DWGraphUtil::checkBranching1(DWGraph &graph, DWGraph &branch) {
             //	cout << "scc " << num_comp << " size=" << mit->second.size() <<
             // endl;
 
-            if (mit->second.size() == 1) continue;
+            if (mit->second.size() == 1)
+                continue;
 
-            vector<int> &sccvec = mit->second;
+            vector<int>& sccvec = mit->second;
             //	branch.removeEdge(sccvec[1],sccvec[0]);
 
             cout << "loop " << num_comp << ": ";
@@ -727,7 +769,8 @@ bool DWGraphUtil::checkBranching1(DWGraph &graph, DWGraph &branch) {
     return true;
 }
 
-bool DWGraphUtil::checkBranch(DWGraph branch) {
+bool DWGraphUtil::checkBranch(DWGraph branch)
+{
     DWVertexList vl = branch.vertices();
     DWVertexList::iterator vlit;
     DWEdgeList el;
@@ -743,12 +786,14 @@ bool DWGraphUtil::checkBranch(DWGraph branch) {
 }
 
 // for test
-void DWGraphUtil::genRandomGraph(int n, double c, const char *filename) {
+void DWGraphUtil::genRandomGraph(int n, double c, const char* filename)
+{
     int threshold = (int)(c);
     DWGraph g;
     int i, j;
     int rand_num;
-    for (i = 0; i < n; i++) g.addVertex(i);
+    for (i = 0; i < n; i++)
+        g.addVertex(i);
 
     map<pair<int, int>, int> checkEdge;
     int weight;
@@ -759,7 +804,8 @@ void DWGraphUtil::genRandomGraph(int n, double c, const char *filename) {
             if (i != j) {
                 rand_num = rand() % n;
                 if (rand_num < threshold) {
-                    if (checkEdge.find(pair<int, int>(i, j)) == checkEdge.end()) {
+                    if (checkEdge.find(pair<int, int>(i, j))
+                        == checkEdge.end()) {
                         weight = rand() % n;
                         g.addEdge(i, j, weight, eid);
                         checkEdge.insert(make_pair(pair<int, int>(i, j), 0));
@@ -785,4 +831,4 @@ void DWGraphUtil::genRandomGraph(int n, double c, const char *filename) {
     */
 }
 
-}  // namespace ptree
+} // namespace ptree

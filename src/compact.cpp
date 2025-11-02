@@ -11,7 +11,8 @@
 #include "graph.h"
 #include "utils.h"
 
-void Compute2Hop(ptree::Graph &graph, int n) {
+void Compute2Hop(ptree::Graph& graph, int n)
+{
     std::unordered_map<string, int> table;
     int size = graph.num_vertices();
     LOG("total node = {}", size);
@@ -52,7 +53,8 @@ void Compute2Hop(ptree::Graph &graph, int n) {
     LOG("after compact, node = {}", table.size());
 }
 
-void ComputeBorder(ptree::Graph &graph) {
+void ComputeBorder(ptree::Graph& graph)
+{
     std::unordered_map<string, int> table;
     int size = graph.num_vertices();
     LOG("total node = {}", size);
@@ -88,7 +90,8 @@ void ComputeBorder(ptree::Graph &graph) {
         }
         table[ss.str()]++;
         if (i % 10000 == 0) {
-            LOG("遍历了{}个节点, 新图节点 = {}, 空集大小 = {}", i, table.size(), table[""]);
+            LOG("遍历了{}个节点, 新图节点 = {}, 空集大小 = {}", i,
+                table.size(), table[""]);
         }
     }
     LOG("after compact, node = {}", table.size());

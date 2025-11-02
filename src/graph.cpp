@@ -4,19 +4,22 @@
 #include <utility>
 #include <vector>
 namespace ptree {
-Graph::Graph() {
+Graph::Graph()
+{
     vsize = 0;
     graph = GRA();
     vl = VertexList();
 }
 
-Graph::Graph(int size) {
+Graph::Graph(int size)
+{
     vsize = size;
     vl = VertexList(size);
     graph = GRA(size, In_OutList());
 }
 
-Graph::Graph(const Graph &other) {
+Graph::Graph(const Graph& other)
+{
     if (this != &other) {
         graph = other.graph;
         vl = other.vl;
@@ -25,18 +28,22 @@ Graph::Graph(const Graph &other) {
     }
 }
 
-Graph::Graph(GRA &g, VertexList &vlist) {
+Graph::Graph(GRA& g, VertexList& vlist)
+{
     vsize = vlist.size();
     graph = g;
     vl = vlist;
 }
 
-Graph::Graph(unordered_map<int, vector<int> > &inlist, unordered_map<int, vector<int> > &outlist) {
+Graph::Graph(unordered_map<int, vector<int>>& inlist,
+    unordered_map<int, vector<int>>& outlist)
+{
     vsize = inlist.size();
     vl = VertexList(vsize);
     graph = GRA(vsize, In_OutList());
-    for (int i = 0; i < vsize; i++) addVertex(i);
-    unordered_map<int, vector<int> >::iterator hit, hit1;
+    for (int i = 0; i < vsize; i++)
+        addVertex(i);
+    unordered_map<int, vector<int>>::iterator hit, hit1;
     unordered_map<int, int> indexmap;
     vector<int> vec;
     vector<int>::iterator vit;
@@ -44,17 +51,21 @@ Graph::Graph(unordered_map<int, vector<int> > &inlist, unordered_map<int, vector
     for (hit = inlist.begin(), k = 0; hit != inlist.end(); hit++, k++) {
         indexmap[hit->first] = k;
     }
-    for (hit = inlist.begin(), hit1 = outlist.begin(), k = 0; hit != inlist.end(); hit++, hit1++, k++) {
+    for (hit = inlist.begin(), hit1 = outlist.begin(), k = 0;
+         hit != inlist.end(); hit++, hit1++, k++) {
         vec = hit->second;
-        for (vit = vec.begin(); vit != vec.end(); vit++) graph[k].inList.push_back(indexmap[*vit]);
+        for (vit = vec.begin(); vit != vec.end(); vit++)
+            graph[k].inList.push_back(indexmap[*vit]);
         vec = hit1->second;
-        for (vit = vec.begin(); vit != vec.end(); vit++) graph[k].outList.push_back(indexmap[*vit]);
+        for (vit = vec.begin(); vit != vec.end(); vit++)
+            graph[k].outList.push_back(indexmap[*vit]);
     }
 }
 
-Graph::~Graph() {}
+Graph::~Graph() { }
 
-void Graph::writeGraph(ostream &out) {
+void Graph::writeGraph(ostream& out)
+{
     cout << "Graph size = " << graph.size() << endl;
     out << "graph_for_greach" << endl;
     out << vl.size() << endl;
@@ -67,7 +78,8 @@ void Graph::writeGraph(ostream &out) {
     for (i = 0; i < vl.size(); i++) {
         out << i << ": ";
         el = graph[i].outList;
-        for (eit = el.begin(); eit != el.end(); eit++) out << (*eit) << " ";
+        for (eit = el.begin(); eit != el.end(); eit++)
+            out << (*eit) << " ";
         out << "#" << endl;
     }
     /*
@@ -82,7 +94,8 @@ void Graph::writeGraph(ostream &out) {
     */
 }
 
-void Graph::addVRoot() {
+void Graph::addVRoot()
+{
     int vid = vl.size();
     graph.push_back(In_OutList());
     vl.push_back(Vertex());
@@ -104,7 +117,8 @@ void Graph::addVRoot() {
     graph[vid] = oil;
 }
 
-bool Graph::addVertex(Vertex v) {
+bool Graph::addVertex(Vertex v)
+{
     if (f.find(make_pair(v.node, v.start)) == f.end()) {
         int vid = vl.size();
         graph.push_back(In_OutList());
@@ -118,7 +132,8 @@ bool Graph::addVertex(Vertex v) {
     return false;
 }
 
-void Graph::addVertex(Vertex v, int gid) {
+void Graph::addVertex(Vertex v, int gid)
+{
     if (f.find(make_pair(v.node, v.start)) == f.end()) {
         int vid = vl.size();
         graph.push_back(In_OutList());
@@ -131,7 +146,8 @@ void Graph::addVertex(Vertex v, int gid) {
     }
 }
 
-int Graph::getVertexId(Vertex v) {
+int Graph::getVertexId(Vertex v)
+{
     if (f.find(make_pair(v.node, v.start)) != f.end()) {
         return f[make_pair(v.node, v.start)];
     } else {
@@ -139,7 +155,8 @@ int Graph::getVertexId(Vertex v) {
     }
 }
 
-void Graph::addVertex(int node, time_t start, time_t end) {
+void Graph::addVertex(int node, time_t start, time_t end)
+{
     if (f.find(make_pair(node, start)) == f.end()) {
         int vid = vl.size();
         graph.push_back(In_OutList());
@@ -164,7 +181,8 @@ void Graph::addVertex(int node, time_t start, time_t end) {
     }
 }
 
-void Graph::addVertex(int vid) {
+void Graph::addVertex(int vid)
+{
     if (vid < 0) {
         return;
     }
@@ -189,7 +207,9 @@ void Graph::addVertex(int vid) {
     // graph[vid] = oil;
 }
 
-void Graph::extract(unordered_map<int, vector<int> > &inlist, unordered_map<int, vector<int> > &outlist) {
+void Graph::extract(unordered_map<int, vector<int>>& inlist,
+    unordered_map<int, vector<int>>& outlist)
+{
     for (int i = 0; i < vl.size(); i++) {
         inlist[i] = graph[i].inList;
         outlist[i] = graph[i].outList;
@@ -197,7 +217,8 @@ void Graph::extract(unordered_map<int, vector<int> > &inlist, unordered_map<int,
     //	printMap(inlist,outlist);
 }
 
-void Graph::addVertex(int node, time_t start, time_t end, int num) {
+void Graph::addVertex(int node, time_t start, time_t end, int num)
+{
     if (f.find(make_pair(node, start)) == f.end()) {
         int vid = vl.size();
         graph.push_back(In_OutList());
@@ -225,7 +246,8 @@ void Graph::addVertex(int node, time_t start, time_t end, int num) {
 
 // 1: border out
 // 2: border in
-void Graph::setVertexBorderFlag(int node, int type) {
+void Graph::setVertexBorderFlag(int node, int type)
+{
     if (type == 1) {
         vl[node].border_out = true;
     } else if (type == 2) {
@@ -233,16 +255,19 @@ void Graph::setVertexBorderFlag(int node, int type) {
     }
 }
 
-void Graph::addEdge(int sid, int tid) {
+void Graph::addEdge(int sid, int tid)
+{
     // update edge list
-    if (find(graph[sid].outList.begin(), graph[sid].outList.end(), tid) != graph[sid].outList.end()) {
+    if (find(graph[sid].outList.begin(), graph[sid].outList.end(), tid)
+        != graph[sid].outList.end()) {
         return;
     }
     graph[tid].inList.push_back(sid);
     graph[sid].outList.push_back(tid);
 }
 
-void Graph::addEdge(pair<int, time_t> a, pair<int, time_t> b) {
+void Graph::addEdge(pair<int, time_t> a, pair<int, time_t> b)
+{
     int sid = cnum(a);
     int tid = cnum(b);
     addEdge(sid, tid);
@@ -252,13 +277,16 @@ void Graph::addEdge(pair<int, time_t> a, pair<int, time_t> b) {
 
 // 拓扑排序，对于不存在偏序关系的两个节点，时间增序排列
 // 直接对拓扑排序后的节点数组按照start增序重排序即可：对start的排序不会打乱原有拓扑顺序
-vector<int> Graph::topological_sort() {
+vector<int>
+Graph::topological_sort()
+{
     vector<int> order;
     queue<int> q;
     vector<int> ind(vsize, 0);
     for (int i = 0; i < vsize; i++) {
         ind[i] = this->in_degree(i);
-        if (ind[i] == 0) q.push(i);
+        if (ind[i] == 0)
+            q.push(i);
     }
 
     while (q.size() > 0) {
@@ -267,18 +295,24 @@ vector<int> Graph::topological_sort() {
         order.push_back(v);
         for (int j : this->out_edges(v)) {
             ind[j]--;
-            if (ind[j] == 0) q.push(j);
+            if (ind[j] == 0)
+                q.push(j);
         }
     }
 
-    // sort(order.begin(), order.end(), [this](int &a, int &b) { return (*this)[a].start < (*this)[b].start; });
+    // sort(order.begin(), order.end(), [this](int &a, int &b) { return
+    // (*this)[a].start < (*this)[b].start; });
 
     return order;
 }
 
-int Graph::num_vertices() const { return vl.size(); }
+int Graph::num_vertices() const
+{
+    return vl.size();
+}
 
-int Graph::num_edges() {
+int Graph::num_edges()
+{
     EdgeList el;
     GRA::iterator git;
     int num = 0;
@@ -290,42 +324,70 @@ int Graph::num_edges() {
 }
 
 // return out edges of specified vertex
-EdgeList &Graph::out_edges(int src) { return graph[src].outList; }
+EdgeList&
+Graph::out_edges(int src)
+{
+    return graph[src].outList;
+}
 
 // return in edges of specified vertex
-EdgeList &Graph::in_edges(int trg) { return graph[trg].inList; }
+EdgeList&
+Graph::in_edges(int trg)
+{
+    return graph[trg].inList;
+}
 
-int Graph::out_degree(int src) { return graph[src].outList.size(); }
+int Graph::out_degree(int src)
+{
+    return graph[src].outList.size();
+}
 
-int Graph::in_degree(int trg) { return graph[trg].inList.size(); }
+int Graph::in_degree(int trg)
+{
+    return graph[trg].inList.size();
+}
 
-int Graph::cnum(pair<int, time_t> p) { return f[p]; }
+int Graph::cnum(pair<int, time_t> p)
+{
+    return f[p];
+}
 
 // get roots of graph (root is zero in_degree vertex)
-vector<int> Graph::getRoots() {
+vector<int>
+Graph::getRoots()
+{
     vector<int> roots;
     GRA::iterator git;
     int i = 0;
     for (git = graph.begin(), i = 0; git != graph.end(); git++, i++) {
-        if (git->inList.size() == 0) roots.push_back(i);
+        if (git->inList.size() == 0)
+            roots.push_back(i);
     }
 
     return roots;
 }
 
 // check whether the edge from src to trg is in the graph
-bool Graph::hasEdge(int src, int trg) {
+bool Graph::hasEdge(int src, int trg)
+{
     EdgeList el = graph[src].outList;
     EdgeList::iterator ei;
     for (ei = el.begin(); ei != el.end(); ei++)
-        if ((*ei) == trg) return true;
+        if ((*ei) == trg)
+            return true;
     return false;
 }
 
 // return vertex list of graph
-VertexList &Graph::vertices() { return vl; }
+VertexList&
+Graph::vertices()
+{
+    return vl;
+}
 
-Graph &Graph::operator=(const Graph &g) {
+Graph&
+Graph::operator=(const Graph& g)
+{
     if (this != &g) {
         graph = g.graph;
         vl = g.vl;
@@ -335,7 +397,9 @@ Graph &Graph::operator=(const Graph &g) {
     return *this;
 }
 
-Graph &Graph::operator=(Graph &&other) {
+Graph&
+Graph::operator=(Graph&& other)
+{
     if (this != &other) {
         graph = std::move(other.graph);
 
@@ -352,7 +416,11 @@ Graph &Graph::operator=(Graph &&other) {
 }
 
 // get a specified vertex property
-Vertex &Graph::operator[](const int vid) { return vl[vid]; }
+Vertex&
+Graph::operator[](const int vid)
+{
+    return vl[vid];
+}
 
 // Graph::Graph(unordered_map<int, vector<int>> &inlist, unordered_map<int,
 // vector<int>> &outlist)
@@ -421,29 +489,41 @@ Vertex &Graph::operator[](const int vid) { return vl[vid]; }
 // 	cout << "================================================" << endl;
 // }
 
-int subGraph::get_gid() { return gid; }
+int subGraph::get_gid()
+{
+    return gid;
+}
 
-void subGraph::set_gid(int gid_) { gid = gid_; }
+void subGraph::set_gid(int gid_)
+{
+    gid = gid_;
+}
 
 // for gripp
-vector<int> *Graph::GetChild(int node) {
+vector<int>*
+Graph::GetChild(int node)
+{
     // return (*adj_listp)[node];
     //  vector<unsigned>* ret = new vector<unsigned>((*adj_listp)[node]);
-    vector<int> *ret = new vector<int>(this->out_edges(node));
+    vector<int>* ret = new vector<int>(this->out_edges(node));
 
     return ret;
 }
 
-bool Graph::CanReach(unsigned nodeA, unsigned nodeB) {
+bool Graph::CanReach(unsigned nodeA, unsigned nodeB)
+{
     std::vector<uint8_t> vis(this->num_vertices(), 0);
     return search(nodeA, nodeB, vis);
 }
-bool Graph::search(unsigned int nodeA, unsigned int nodeB, std::vector<uint8_t> &vis) {
-    if (nodeA == nodeB) return true;
+bool Graph::search(unsigned int nodeA, unsigned int nodeB,
+    std::vector<uint8_t>& vis)
+{
+    if (nodeA == nodeB)
+        return true;
     vis[nodeA] = 1;
     // int len = (*adj_listp)[nodeA].size();
     int len = this->out_degree(nodeA);
-    EdgeList &edge = this->out_edges(nodeA);
+    EdgeList& edge = this->out_edges(nodeA);
     for (int i = 0; i < len; i++) {
         // if(!vis[(*adj_listp)[nodeA][i]] &&
         // 	search((*adj_listp)[nodeA][i],nodeB))
@@ -456,30 +536,42 @@ bool Graph::search(unsigned int nodeA, unsigned int nodeB, std::vector<uint8_t> 
 }
 
 #ifdef GRAIL
-const double Graph::actualgap(const int vid) {
+const double
+Graph::actualgap(const int vid)
+{
     return vl[vid].mingap;
     //	return vl[vid].mingap - vl[vid].tcs;
 }
-const double Graph::tcs(const int vid) { return vl[vid].tcs; }
+const double
+Graph::tcs(const int vid)
+{
+    return vl[vid].tcs;
+}
 
-bool Graph::incrementalContains(int src, int trg, int cur) {
+bool Graph::incrementalContains(int src, int trg, int cur)
+{
     int i;
     for (i = 0; i < cur; i++) {
-        if (vl[src].pre->at(i) > vl[trg].pre->at(i)) return false;
-        if (vl[src].post->at(i) < vl[trg].post->at(i)) return false;
+        if (vl[src].pre->at(i) > vl[trg].pre->at(i))
+            return false;
+        if (vl[src].post->at(i) < vl[trg].post->at(i))
+            return false;
     }
     return true;
 }
 
-bool Graph::contains(int src, int trg, int dim) {
+bool Graph::contains(int src, int trg, int dim)
+{
     int i;
     for (i = 0; i < dim; i++) {
-        if (vl[src].pre->at(i) > vl[trg].pre->at(i)) return false;
-        if (vl[src].post->at(i) < vl[trg].post->at(i)) return false;
+        if (vl[src].pre->at(i) > vl[trg].pre->at(i))
+            return false;
+        if (vl[src].post->at(i) < vl[trg].post->at(i))
+            return false;
     }
     return true;
 }
 
 #endif
 
-}  // namespace ptree
+} // namespace ptree
